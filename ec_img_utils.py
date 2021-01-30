@@ -37,6 +37,7 @@ def get_img_info(img):
         info_dict['Shape'] = [img.shape]
         info_dict['Data type'] = [img.dtype]
         info_dict['Bytes'] = [img.itemsize * np.prod(img.shape)]
+        info_dict['Range'] = [np.min(img), np.max(img)]
         
         #print info to display
         print("Image Information\n\n",tabulate(info_dict, headers = "keys", tablefmt = 'github'))
