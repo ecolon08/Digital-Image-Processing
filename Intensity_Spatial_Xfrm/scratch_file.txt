@@ -1,0 +1,28 @@
+Scratch file with some notes removed from the notebook
+#https://realpython.com/instance-class-and-static-methods-demystified/
+
+
+**Example 3.13 from DIPUM - HPF from LPF** --> **need to generate a 2D FIR filter, but don't know how to do this in Python... Import coefficients from Matlab?**
+
+Gonzalez et al. generated a length-129 FIR filter using Matlab which we will use in the following example.
+
+#######################
+# HIGH PASS FILTERS
+#######################
+
+#load the lowpass kernel
+with open('lpkernel1D.txt') as lp1d_file:
+    #read fir coeff
+    data = lp1d_file.read()
+    
+    #split string
+    data = list(data.split(','))
+    
+    #convert strings to floats
+    wLP1D = [float(coeff) for coeff in data]
+    
+#convert to numpy array
+wLP1D = np.asarray(wLP1D).reshape(-1,1)
+
+#create 2D kernel by computing the outer product - This assumes that our filter kernel is separable, but we know that only Gaussian kernels are separable
+wLP2D = wLP1D @ np.transpose(wLP1D)
