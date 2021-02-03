@@ -147,7 +147,8 @@ def specified_xfm(img, args_dict):
     #parse through arguments
     #check if args_dict is empty
     if not bool(args_dict):
-        Exception("Not enough inputs")
+        raise Exception("Not enough inputs")
+    
     else:
         #extract intensity transformation function
         txfun = args_dict['txfun']
@@ -212,4 +213,137 @@ def intensity_xfms(img, method, args_dict):
     return out_img
 
 
+# %%
+#Frequency Domain Filtering utility functions
+def dftuv(M,N):
+    #set up range of values 
+    u = np.arange(0,M)
+    v = np.arange(0,N)
 
+    #compute the indices for use in meshgrid corresponding to the positive
+    #frequency points in a 2D FT
+  
+    idx = u > M/2
+    u[idx] = u[idx] - M
+
+    idy = v > N/2
+    v[idy] = v[idy] - N
+
+    #compute the meshgrid arrays
+    U, V = np.meshgrid(u, v)
+    
+    return U, V
+
+def next_pwr_2(n):
+    return np.ceil(np.log2(n))
+
+def padded_size(params_dict):
+    '''
+    
+
+    Parameters
+    ----------
+    params_dict : TYPE
+        DESCRIPTION.
+
+    Raises
+    ------
+    Exception
+        DESCRIPTION.
+
+    Returns
+    -------
+    padded_dim : TYPE
+        DESCRIPTION.
+
+    '''
+    #check if the parameter dictionary is empty
+    if not bool(params_dict):
+        raise Exception("Invalid input arguments")
+        
+    else:
+        #Go through cases
+        if len(params_dict.keys()) == 1 and 'img_dim' in params_dict.keys():
+            #check if the input dimensions vector is an array
+            if type(params_dict['img_dim']) != np.ndarray:
+                params_dict['img_dim'] = np.array(params_dict['img_dim'])
+            
+            #compute output padded dimensions
+            padded_dim = 2*params_dict['img_dim']
+            
+        elif len(params_dict.keys()) == 2 and 'img_dim' in params_dict.keys() and 'pwr2' in params_dict.keys():
+            #check if the input dimensions vector is an array
+            if type(params_dict['img_dim']) != np.ndarray:
+                params_dict['img_dim'] = np.array(params_dict['img_dim'])
+           
+            #Extract max dimension in case image is not a square
+            max_dim = np.max(params_dict['img_dim'])
+            
+            #compute next power of two
+            out_dim = np.power(next_pwr_2(2*max_dim),2)
+            
+            #create padded_dim array
+            padded_dim = np.array([out_dim, out_dim])
+            
+        elif len(params_dict.keys()) == 2 and 'img_dim' in params_dict.keys() and 'krnl_dim' in params_dict.keys():
+            #check if the input dimensions vector is an array
+            if type(params_dict['img_dim']) != np.ndarray:
+                params_dict['img_dim'] = np.array(params_dict['img_dim'])
+
+            #check if the input dimensions vector is an array
+            if type(params_dict['krnl_dim']) != np.ndarray:
+                params_dict['krnl_dim'] = np.array(params_dict['krnl_dim'])
+
+                
+            out_dim = params_dict['img_dim'] + params_dict['krnl_dim'] - 1
+            padded_dim = 2*np.ceil(out_dim/2)
+            
+        elif len(params_dict.keys()) == 3:
+            if type(params_dict['img_dim']) != np.ndarray:
+                params_dict['img_dim'] = np.array(params_dict['img_dim'])
+
+            #check if the input dimensions vector is an array
+            if type(params_dict['krnl_dim']) != np.ndarray:
+                params_dict['krnl_dim'] = np.array(params_dict['krnl_dim'])
+ 
+            max_dim = np.max([params_dict['img_dim'], params_dict['krnl_dim']])
+            
+            #compute next pwr of two
+            out_dim = np.power(next_pwr_2(2*max_dim),2)
+            
+            #generate padded_dim vector
+            padded_dim = np.array([out_dim, out_dim])
+        
+    return padded_dim
+    
+def lp_gaussian(M, N, D0):
+    '''
+    Function to return a frequency domain transfer function H(u,v) of size 
+    M x N for a lowpass Gaussian filter with cutoff frequency (std dev) at D0.
+    
+    Adapted from Digital Image Processing Using Matlab, 3rd ed. by Gonzalez et al.
+    
+    Parameters
+    ----------
+    M : int
+        Vertical dimension (e.g., M x N) of filter transfer function
+    N : int
+        Horizontal dimension (e.g., M x N) of filter transfer function
+    D0 : float or int
+        Cutoff frequency (std dev). Must be positive
+
+    Returns
+    -------
+    Transfer function H of float type
+
+    '''
+    #generate the meshgrid from the input dimensions using function dftuv
+    U, V = dftuv(M, N)
+    
+    #compute the distances from the origin to each point in the grid
+    D = np.sqrt(U**2 + V**2)
+    
+    #compute Gaussian transer function
+    H = np.exp(-np.power(D,2)/(2*np.power(D0,2)))
+
+    return H
