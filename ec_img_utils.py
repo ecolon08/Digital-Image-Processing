@@ -374,6 +374,11 @@ def lp_filter(flt_type, M, N, D0, n=1):
 
     return H
 
+def hp_filter(flt_type, M, N, D0, n=1):
+    # Generate highpass filter transfer function from the lowpass representation
+    H = 1.0 - lp_filter(flt_type, M, N, D0, n)
+
+    return H
 
 def lp_butterworth(M, N, D0, n):
     # Create meshgrid
