@@ -337,7 +337,7 @@ def dft_filt(img, H, pad_method):
     # Pad img to the size of the transfer function, using the default or the specified pad_method
     #img_padded = np.pad(img, ((krnl_dim[0] - img_dim[0]) // 2, (krnl_dim[1] - img_dim[1]) // 2),
     #                    mode=pad_method)
-    img_padded = np.pad(img, ((krnl_dim[0] - img_dim[0]) // 2, (krnl_dim[1] - img_dim[1]) // 2), mode=pad_method)
+    img_padded = np.pad(img, ((orig_shft[0], orig_shft[0]), (orig_shft[1], orig_shft[1])), mode=pad_method)
 
     # Compute the FFT of the input image
     F = scipy.fft.fft2(img_padded)
@@ -346,7 +346,7 @@ def dft_filt(img, H, pad_method):
     g = scipy.fft.ifft2(F * H)
 
     # Crop to the original size
-    g = skimage.img_as_float(np.real(g[orig_shft[0] - 1:orig_shft[0] + img_dim[0] - 1, orig_shft[1] - 1:orig_shft[0] + img_dim[1] - 1]))
+    g = skimage.img_as_float(np.real(g[orig_shft[0] - 1:orig_shft[0] + img_dim[0] - 1, orig_shft[1] - 1:orig_shft[1] + img_dim[1] - 1]))
     #g = skimage.img_as_float(np.real(g))
 
     return g
