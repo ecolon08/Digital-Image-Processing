@@ -221,6 +221,23 @@ def intensity_xfms(img, method, args_dict):
 # %%
 # Frequency Domain Filtering utility functions
 def dftuv(M, N):
+    """
+    Function to compute meshgrid frequency matrices that are useful for computing frequency domain filter transfer
+    functions that can be used with dft_filt(). U and V are both of size M x N.
+
+    Parameters
+    ----------
+    M : int
+        Vertical dimension (e.g., M x N) of filter transfer function
+    N : int
+        Horizontal dimension (e.g., M x N) of filter transfer function
+
+    Returns
+    -------
+    U, V : ndarray
+        meshgrid frequency matrices.
+    """
+
     # set up range of values
     u = np.arange(0, M)
     v = np.arange(0, N)
@@ -241,29 +258,55 @@ def dftuv(M, N):
 
 
 def next_pwr_2(n):
-    return np.ceil(np.log2(n))
-
-
-def padded_size(params_dict):
-    '''
-    
+    """
+    Function to compute the next power of two given an input number n.
 
     Parameters
     ----------
-    params_dict : TYPE
-        DESCRIPTION.
+    n : int or float
+        Number to compute the next power of two M such that 2^M >= n.
+    Returns
+    -------
+    M : float
+        Power of 2 such that 2^M >= n.
+    """
+    M = np.ceil(np.log2(n))
 
+    return M
+
+
+def padded_size(params_dict):
+    """
+    Function to compute padded sizes useful for FFT-based filtering.
+
+    If only the img_dim is passed in the dictionary, the function returns 2*img_dim
+
+    If in addition to img_dim, the pwer2 flag is passed, the function computes the padded dimensions that are the next
+    closest power of 2. This case is useful to speed up FFT computations.
+
+    If both img_dim and krnl_dim are passed, the function returns the sum of the array dimensions
+    img_dim + krnl_dim - 1
+
+    Lastly, if img_dim, krnl_dim, and pwr2 are passed, the function computes the maximum dimension from the two arrays
+    and returns the next closest power of 2.
+
+    Parameters
+    ----------
+    params_dict : dict
+        Valid keys-value pairs:
+            img_dim : array-like with input image's dimensions
+            krnl_dim : array-like with input kernel's dimensions
+            pwr2 : Boolean flag
     Raises
     ------
     Exception
-        DESCRIPTION.
+        The function raises an exception if the params_dict contains invalid inputs.
 
     Returns
     -------
-    padded_dim : TYPE
-        DESCRIPTION.
-
-    '''
+    padded_dim : array-like
+        padded dimensions computed.
+    """
     # check if the parameter dictionary is empty
     if not bool(params_dict):
         raise Exception("Invalid input arguments")
@@ -324,6 +367,61 @@ def padded_size(params_dict):
 
 
 def dft_filt(img, H, pad_method):
+    """
+    Function to perform frequency domain filtering given an input image and transfer functon.
+
+    Adapted from Digital Image Processing Using Matlab, 3rd ed. by Gonzalez et al.
+
+    Parameters
+    ----------
+    img : any valid image type supported by skimage
+    H : ndarray
+        Frequency domain filter transfer function. The function assumes that H already has the correct dimensions needed
+        for filtering and has not been fftshifted
+    pad_method : string        Padding method for input image. Valid options are outlined in the np.pad documentation:
+        https://numpy.org/doc/stable/reference/generated/numpy.pad.html
+        modestr or function, optional
+
+        One of the following string values or a user supplied function.
+
+        ‘constant’ (default)
+        Pads with a constant value.
+
+        ‘edge’
+        Pads with the edge values of array.
+
+        ‘linear_ramp’
+        Pads with the linear ramp between end_value and the array edge value.
+
+        ‘maximum’
+        Pads with the maximum value of all or part of the vector along each axis.
+
+        ‘mean’
+        Pads with the mean value of all or part of the vector along each axis.
+
+        ‘median’
+        Pads with the median value of all or part of the vector along each axis.
+
+        ‘minimum’
+        Pads with the minimum value of all or part of the vector along each axis.
+
+        ‘reflect’
+        Pads with the reflection of the vector mirrored on the first and last values of the vector along each axis.
+
+        ‘symmetric’
+        Pads with the reflection of the vector mirrored along the edge of the array.
+
+        ‘wrap’
+        Pads with the wrap of the vector along the axis. The first values are used to pad the end and the end values are used to pad the beginning.
+
+        ‘empty’
+        Pads with undefined values.
+
+    Returns
+    -------
+    Transfer function H of float type
+    """
+
     # Get image and kernel dimensions
     img_dim = img.shape
     krnl_dim = H.shape
@@ -353,6 +451,30 @@ def dft_filt(img, H, pad_method):
 
 
 def lp_filter(flt_type, M, N, D0, n=1):
+    """
+    Function to compute lowpass filter frequency domain transfer functions H_LP(u,v) of size
+    M x N with cutoff frequency (std dev) at D0.
+
+    Adapted from Digital Image Processing Using Matlab, 3rd ed. by Gonzalez et al.
+
+    Parameters
+    ----------
+    flt_type : string
+        Valid values are:
+        - 'ideal' for brickwall filter with cutoff at D0
+        - 'butterwoth'for Butterworth transfer function
+        - 'gaussian' for Gaussian LPF transfer function
+
+    M : int
+        Vertical dimension (e.g., M x N) of filter transfer function
+    N : int
+        Horizontal dimension (e.g., M x N) of filter transfer function
+    D0 : float or int
+        Cutoff frequency (std dev). Must be positive
+    Returns
+    -------
+    Transfer function H of float type
+    """
     # Protect against upper case
     flt_type = flt_type.lower()
 
@@ -374,32 +496,44 @@ def lp_filter(flt_type, M, N, D0, n=1):
 
     return H
 
+
 def hp_filter(flt_type, M, N, D0, n=1):
+    """
+    Function to compute highpass filter frequency domain transfer functions H_LP(u,v) of size
+    M x N with cutoff frequency (std dev) at D0.
+
+    Adapted from Digital Image Processing Using Matlab, 3rd ed. by Gonzalez et al.
+
+    Parameters
+    ----------
+    flt_type : string
+        Valid values are:
+        - 'ideal' for brickwall filter with cutoff at D0
+        - 'butterwoth'for Butterworth transfer function
+        - 'gaussian' for Gaussian LPF transfer function
+
+    M : int
+        Vertical dimension (e.g., M x N) of filter transfer function
+    N : int
+        Horizontal dimension (e.g., M x N) of filter transfer function
+    D0 : float or int
+        Cutoff frequency (std dev). Must be positive
+    Returns
+    -------
+    Transfer function H of float type
+    """
     # Generate highpass filter transfer function from the lowpass representation
     H = 1.0 - lp_filter(flt_type, M, N, D0, n)
 
     return H
 
-def lp_butterworth(M, N, D0, n):
-    # Create meshgrid
-    U, V = dftuv(M, N)
-
-    # compute the distances in the meshgrid
-    D = np.hypot(U, V)
-
-    # Compute xfr function
-    H = 1 / (1 + (D / D0) ** (2 * n))
-
-    return H
-
-
 def lp_gaussian(M, N, D0):
-    '''
-    Function to return a frequency domain transfer function H(u,v) of size 
+    """
+    Function to return a frequency domain transfer function H(u,v) of size
     M x N for a lowpass Gaussian filter with cutoff frequency (std dev) at D0.
-    
+
     Adapted from Digital Image Processing Using Matlab, 3rd ed. by Gonzalez et al.
-    
+
     Parameters
     ----------
     M : int
@@ -412,8 +546,7 @@ def lp_gaussian(M, N, D0):
     Returns
     -------
     Transfer function H of float type
-
-    '''
+    """
     # generate the meshgrid from the input dimensions using function dftuv
     U, V = dftuv(M, N)
 
@@ -422,5 +555,37 @@ def lp_gaussian(M, N, D0):
 
     # compute Gaussian transer function
     H = np.exp(-np.power(D, 2) / (2 * np.power(D0, 2)))
+
+    return H
+
+
+def lp_butterworth(M, N, D0, n):
+    """
+    Function to return a frequency domain transfer function H(u,v) of size
+    M x N for a lowpass Butterworth filter with cutoff frequency D0 and order.
+
+    Adapted from Digital Image Processing Using Matlab, 3rd ed. by Gonzalez et al.
+
+    Parameters
+    ----------
+    M : int
+        Vertical dimension (e.g., M x N) of filter transfer function
+    N : int
+        Horizontal dimension (e.g., M x N) of filter transfer function
+    D0 : float or int
+        Cutoff frequency (std dev). Must be positive
+
+    Returns
+    -------
+    Transfer function H of float type
+    """
+    # Create meshgrid
+    U, V = dftuv(M, N)
+
+    # compute the distances in the meshgrid
+    D = np.hypot(U, V)
+
+    # Compute xfr function
+    H = 1 / (1 + (D / D0) ** (2 * n))
 
     return H
