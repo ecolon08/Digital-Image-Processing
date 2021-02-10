@@ -440,7 +440,10 @@ def dft_filt(img, H, pad_method):
     g = scipy.fft.ifft2(F * H)
 
     # Crop to the original size
-    g = skimage.img_as_float(np.real(g[orig_shft[0] - 1:orig_shft[0] + img_dim[0] - 1, orig_shft[1] - 1:orig_shft[1] + img_dim[1] - 1]))
+    if img_dim == krnl_dim:
+        g = skimage.img_as_float(np.real(g))
+    else:
+        g = skimage.img_as_float(np.real(g[orig_shft[0] - 1:orig_shft[0] + img_dim[0] - 1, orig_shft[1] - 1:orig_shft[1] + img_dim[1] - 1]))
     #g = skimage.img_as_float(np.real(g))
 
     return g
