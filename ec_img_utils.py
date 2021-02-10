@@ -9,17 +9,13 @@ Image processing module for ECE419
 The purpose of this module is to compile/construct a collection of image 
 processing utilities as I progress through the course
 """
-import sys
 import numpy as np
 import scipy
 from tabulate import tabulate
-import cv2
 import exifread
 
 import skimage
 import skimage.util
-from skimage import io
-import matplotlib.pyplot as plt
 
 
 def get_img_info(img):
@@ -589,3 +585,57 @@ def lp_butterworth(M, N, D0, n):
     H = 1 / (1 + (D / D0) ** (2 * n))
 
     return H
+
+
+def bandfilter(params_dict):
+
+    # extract parameters from the params_dict input
+    if 'n' not in params_dict.keys():
+        n = 1
+    else:
+        n = params_dict['n']
+
+    if 'W' and 'C0' not in params_dict.keys():
+        raise Exception("No W or C0 parameters specified")
+
+    W = params_dict['W']
+    C0 = params_dict['C0']
+
+    # Use dftuv to set up the meshgrid arrays
+    U, V = dftuv(params_dict['M'], params_dict['N'])
+
+    # compute the distances in the meshgrid
+    D =  np.hypot(U,V)
+
+    # Go through different cases for the three different filter types
+    if params_dict['type'] == 'ideal':
+        H = ideal_reject(D, C0, W)
+    elif params_dict['type'] == 'butterworth':
+        H = bttr_reject(D, C0, W, n)
+    elif params_dict['type'] == 'gaussian':
+        gauss_reject(D, C0, W)
+    else:
+        raise Exception("Unknown filter type")
+
+    # convert to bandpass if specified
+    if params_dict['bandpass_flag'] == True:
+        H = 1 - H
+
+    return H
+
+
+def ideal_reject(D, C0, W):
+
+    # compute points inside the inner boundary of the reject band
+    RI = D <= C0 - (W/2)
+
+    # compute points inside the inner boundary of the reject band
+    RO = D >= C0 + (W/2)
+
+    # ideal bandreject transfer function
+    H = np.logical_or(RI, RO).astype(np.float)
+
+    return H
+
+
+test = bandfilter({'M': 512, 'N': 512, 'C0': 15, 'W': 3, 'type': 'ideal', 'bandpass_flag': False})
