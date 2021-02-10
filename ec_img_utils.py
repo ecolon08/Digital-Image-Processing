@@ -605,7 +605,7 @@ def bandfilter(params_dict):
     U, V = dftuv(params_dict['M'], params_dict['N'])
 
     # compute the distances in the meshgrid
-    D =  np.hypot(U,V)
+    D = np.hypot(U,V)
 
     # Go through different cases for the three different filter types
     if params_dict['type'] == 'ideal':
@@ -613,7 +613,7 @@ def bandfilter(params_dict):
     elif params_dict['type'] == 'butterworth':
         H = bttr_reject(D, C0, W, n)
     elif params_dict['type'] == 'gaussian':
-        gauss_reject(D, C0, W)
+        H = gauss_reject(D, C0, W)
     else:
         raise Exception("Unknown filter type")
 
@@ -638,4 +638,18 @@ def ideal_reject(D, C0, W):
     return H
 
 
-test = bandfilter({'M': 512, 'N': 512, 'C0': 15, 'W': 3, 'type': 'ideal', 'bandpass_flag': False})
+def bttr_reject(D, C0, W, n):
+    H = 1 / (1 + ((D*W)/(D**2 - C0**2 + 1e-6))**(2*n))
+
+    return H
+
+
+def gauss_reject(D, C0, W):
+    H = 1 - np.exp(-((D**2 - C0**2)/(D*W + 1e-8))**2)
+    #H = 1 - exp(-((D. ^ 2 - C0 ^ 2). / (D. * W + eps)). ^ 2);
+    return H
+
+import scipy.fft
+#test_ideal = scipy.fft.fftshift(bandfilter({'M': 512, 'N': 512, 'C0': 15, 'W': 3, 'type': 'ideal', 'bandpass_flag': False}))
+#test_bttr_reject = scipy.fft.fftshift(bandfilter({'M': 512, 'N': 512, 'C0': 128, 'W': 60, 'n': 3, 'type': 'butterworth', 'bandpass_flag': False}))
+#test_gaussian_reject = scipy.fft.fftshift(bandfilter({'M': 512, 'N': 512, 'C0': 128, 'W': 60, 'type': 'gaussian', 'bandpass_flag': False}))
