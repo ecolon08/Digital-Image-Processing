@@ -652,7 +652,107 @@ def gauss_reject(D, C0, W):
     #H = 1 - exp(-((D. ^ 2 - C0 ^ 2). / (D. * W + eps)). ^ 2);
     return H
 
-import scipy.fft
-#test_ideal = scipy.fft.fftshift(bandfilter({'M': 512, 'N': 512, 'C0': 15, 'W': 3, 'type': 'ideal', 'bandpass_flag': False}))
-#test_bttr_reject = scipy.fft.fftshift(bandfilter({'M': 512, 'N': 512, 'C0': 128, 'W': 60, 'n': 3, 'type': 'butterworth', 'bandpass_flag': False}))
-#test_gaussian_reject = scipy.fft.fftshift(bandfilter({'M': 512, 'N': 512, 'C0': 128, 'W': 60, 'type': 'gaussian', 'bandpass_flag': False}))
+#######################################
+# IMAGE RESTORATION AND RECONSTRUCTION
+#######################################
+
+def imnoise(img, params_dict):
+
+    # convert image to float
+    img = skimage.img_as_float(img)
+
+    # get img size
+    M, N = img.shape
+
+    # convert noise type to lower case to protect against uppercase
+    type = params_dict['type'].lower()
+
+    # go through cases
+    if type == 'uniform':
+        noise = a + (b - a)*np.random.rand(M,N)
+        img_noisy = img + noise
+    elif type == 'gaussian':
+        noise = a + b * np.random.randn(M,N)
+        img_noisy = img + noise
+    elif type == 'salt_pepper':
+        noise = salt_pepper(M,N,a,b)
+
+        img_noisy = img
+        # set the values of 'salt' to 1
+        img_noisy[ noise == 1] = 1
+
+        # set the values of 'pepper' to 0
+        img_noisy[ noise == 0] = 0
+
+    elif type == 'lognormal':
+        noise = np.exp(b*np.random.randn(M,N) + a)
+        img_noisy = img + noise
+
+    elif type == 'rayleigh':
+        noise = a + (-b*np.log(1 - np.random.rand(M,N)))**(0.5)
+
+        img_noisy = img + noise
+
+    elif type == 'exponential':
+        noise = np.random.exponential(scale = a, size = (M,N))
+
+        img_noisy = img + noise
+
+    elif type == 'erlang':
+        noise = erlang(M,N,a,b)
+
+        img_noisy = img + noise
+    else:
+        raise Exception("Unknown distribution type")
+
+    # scale image to full range and return
+    img_noisy = img_noisy/np.max(img_noisy)
+
+    return img_noisy, noise
+
+
+def salt_pepper(M,N,a,b):
+    # check to make sure that probabilities are valid
+    if (a + b) > 1:
+        raise Exception("The sum (a + b) must not exceed 1")
+
+    # generate array to populate with salt and pepper noise
+    sp_arr = 0.5*np.ones((M,N))
+
+    # Generate an array of uniformly distributed random numbers in the range (0,1). Then Pp*(M*N) of them will have
+    # values <= b. We set these coordinates points to 0. Similarly, Ps*(M*N) points will have values in the range
+    # > b and <= (a + b). These are set to 1
+
+    X = np.random.rand(M,N)
+
+    # get pepper mask
+    pepper_mask = np.where(X <= b, True, False)
+
+    # set values to zero
+    sp_arr[pepper_mask] = 0
+
+    # get salt mask
+    salt_mask = np.where(np.logical_and(X > b, X < (a + b)), True, False)
+
+    # set values to one
+    sp_arr[salt_mask] = 1
+
+    return sp_arr
+
+#test_sp = salt_pepper(100, 100, 0.05, 0.05)
+
+
+def erlang(M,N,a,b):
+    # check that b is a positive integer
+    if b != np.round(b) or b <= 0:
+        raise Exception("Parameter b must be a positive integer for Erlang")
+
+    k = -1/a
+    R = np.zeros((M,N))
+
+    for j in range(b):
+        R = R + k*np.log(1 - np.random.rand(M,N))
+
+    return R
+
+#test_erlang = erlang(100000,1,0.05,4)
