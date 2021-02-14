@@ -667,39 +667,85 @@ def imnoise(img, params_dict):
     # convert noise type to lower case to protect against uppercase
     type = params_dict['type'].lower()
 
+    # extract a and b parameters
+    if 'a' in params_dict.keys():
+        a = params_dict['a']
+
+    if 'b' in params_dict.keys():
+        b = params_dict['b']
+
     # go through cases
     if type == 'uniform':
-        noise = a + (b - a)*np.random.rand(M,N)
+        if 'a' not in params_dict.keys():
+            a = 0
+        if 'b' not in params_dict.keys():
+            b = 1
+
+        noise = a + (b - a) * np.random.rand(M, N)
+
         img_noisy = img + noise
+
     elif type == 'gaussian':
-        noise = a + b * np.random.randn(M,N)
+        if 'a' not in params_dict.keys():
+            a = 0
+        if 'b' not in params_dict.keys():
+            b = 1
+
+        noise = a + b * np.random.randn(M, N)
+
         img_noisy = img + noise
+
     elif type == 'salt_pepper':
-        noise = salt_pepper(M,N,a,b)
+        if 'a' not in params_dict.keys():
+            a = 0.05
+        if 'b' not in params_dict.keys():
+            b = 0.05
+
+        noise = salt_pepper(M, N, a, b)
 
         img_noisy = img
+
         # set the values of 'salt' to 1
-        img_noisy[ noise == 1] = 1
+        img_noisy[noise == 1] = 1
 
         # set the values of 'pepper' to 0
-        img_noisy[ noise == 0] = 0
+        img_noisy[noise == 0] = 0
 
     elif type == 'lognormal':
-        noise = np.exp(b*np.random.randn(M,N) + a)
+        if 'a' not in params_dict.keys():
+            a = 1
+        if 'b' not in params_dict.keys():
+            b = 0.25
+
+        noise = np.exp(b*np.random.randn(M, N) + a)
+
         img_noisy = img + noise
 
     elif type == 'rayleigh':
-        noise = a + (-b*np.log(1 - np.random.rand(M,N)))**(0.5)
+        if 'a' not in params_dict.keys():
+            a = 0
+        if 'b' not in params_dict.keys():
+            b = 1
+
+        noise = a + (-b*np.log(1 - np.random.rand(M, N)))**(0.5)
 
         img_noisy = img + noise
 
     elif type == 'exponential':
-        noise = np.random.exponential(scale = a, size = (M,N))
+        if 'a' not in params_dict.keys():
+            a = 1
+
+        noise = np.random.exponential(scale=a, size=(M, N))
 
         img_noisy = img + noise
 
     elif type == 'erlang':
-        noise = erlang(M,N,a,b)
+        if 'a' not in params_dict.keys():
+            a = 2
+        if 'b' not in params_dict.keys():
+            b = 5
+
+        noise = erlang(M, N, a, b)
 
         img_noisy = img + noise
     else:
@@ -711,19 +757,19 @@ def imnoise(img, params_dict):
     return img_noisy, noise
 
 
-def salt_pepper(M,N,a,b):
+def salt_pepper(M, N, a, b):
     # check to make sure that probabilities are valid
     if (a + b) > 1:
         raise Exception("The sum (a + b) must not exceed 1")
 
     # generate array to populate with salt and pepper noise
-    sp_arr = 0.5*np.ones((M,N))
+    sp_arr = 0.5*np.ones((M, N))
 
     # Generate an array of uniformly distributed random numbers in the range (0,1). Then Pp*(M*N) of them will have
     # values <= b. We set these coordinates points to 0. Similarly, Ps*(M*N) points will have values in the range
     # > b and <= (a + b). These are set to 1
 
-    X = np.random.rand(M,N)
+    X = np.random.rand(M, N)
 
     # get pepper mask
     pepper_mask = np.where(X <= b, True, False)
@@ -742,16 +788,16 @@ def salt_pepper(M,N,a,b):
 #test_sp = salt_pepper(100, 100, 0.05, 0.05)
 
 
-def erlang(M,N,a,b):
+def erlang(M, N, a, b):
     # check that b is a positive integer
     if b != np.round(b) or b <= 0:
         raise Exception("Parameter b must be a positive integer for Erlang")
 
     k = -1/a
-    R = np.zeros((M,N))
+    R = np.zeros((M, N))
 
     for j in range(b):
-        R = R + k*np.log(1 - np.random.rand(M,N))
+        R = R + k*np.log(1 - np.random.rand(M, N))
 
     return R
 
