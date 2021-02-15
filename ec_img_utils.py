@@ -18,6 +18,7 @@ import skimage
 import skimage.util
 import skimage.restoration
 from scipy.ndimage import convolve
+import skimage.filters
 
 
 def get_img_info(img):
@@ -858,6 +859,12 @@ def spatial_fitler(img, params_dict):
     if params_dict["type"] == "chmean":
         img_flt = contra_harmonic_filter(img, m, n, q, d)
 
+    if params_dict["type"] == "max":
+        img_flt = skimage.filters.rank.maximum(img, selem=np.ones((m, n)))
+
+    if params_dict["type"] == "min":
+        img_flt = skimage.filters.rank.minimum(img, selem=np.ones((m, n)))
+
     return img_flt
 
 
@@ -893,30 +900,6 @@ def contra_harmonic_filter(img, m, n, q, d):
     #f = f. / (imfilter(g. ^ q, ones(m, n), 'replicate') + eps);
 
     return img_flt
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
