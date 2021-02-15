@@ -875,10 +875,10 @@ def spatial_fitler(img, params_dict):
         img_flt = contra_harmonic_filter(img, m, n, q, d)
 
     if params_dict["type"] == "max":
-        img_flt = skimage.filters.rank.maximum(img, selem=np.ones((m, n)))
+        img_flt = skimage.filters.rank.maximum(skimage.img_as_ubyte(img), selem=np.ones((m, n)))
 
     if params_dict["type"] == "min":
-        img_flt = skimage.filters.rank.minimum(img, selem=np.ones((m, n)))
+        img_flt = skimage.filters.rank.minimum(skimage.img_as_ubyte(img), selem=np.ones((m, n)))
 
     return img_flt
 
@@ -909,7 +909,7 @@ def contra_harmonic_filter(img, m, n, q, d):
 
     # filter image
     img_flt = convolve(img ** (q + 1), np.ones((m, n)), mode='nearest')
-    img_flt = img_flt / (convolve(img ** q, np.ones((m, n)), mode='nearest') + 1e-10)
+    img_flt = img_flt / (convolve((img + 1e-10) ** q, np.ones((m, n)), mode='nearest') + 1e-10)
 
     #f = imfilter(g. ^ (q + 1), ones(m, n), 'replicate');
     #f = f. / (imfilter(g. ^ q, ones(m, n), 'replicate') + eps);
