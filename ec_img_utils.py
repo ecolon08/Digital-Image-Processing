@@ -802,3 +802,21 @@ def erlang(M, N, a, b):
     return R
 
 #test_erlang = erlang(100000,1,0.05,4)
+
+def first_second_moment(img):
+    # save original image type
+
+    #convert image to uint8 in case it is not already of uint8 type
+    img = skimage.img_as_ubyte(img)
+
+    # compute normalized image histogram with 256 bins
+    bins = np.arange(0, 257, 1)
+    hist, hist_ctrs = np.histogram(img, bins=bins, density=True)
+
+    # computing moments
+    mean = np.sum(bins[:-1] * hist)
+    second_moment = np.sum(np.power((bins[:-1] - mean), 2) * hist)
+
+    return mean, second_moment
+
+
