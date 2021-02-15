@@ -912,6 +912,7 @@ def get_motion_kernel(length, angle):
 
     # normalize the kernel by the size dim
     krnl = krnl / length
+    #krnl = krnl / np.sum(krnl)
 
     # rotate krnl by specified angle
     krnl_rotated = skimage.transform.rotate(krnl, angle=angle)
