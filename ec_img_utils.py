@@ -19,6 +19,7 @@ import skimage.util
 import skimage.restoration
 from scipy.ndimage import convolve
 import skimage.filters
+import skimage.transform
 
 
 def get_img_info(img):
@@ -902,8 +903,20 @@ def contra_harmonic_filter(img, m, n, q, d):
     return img_flt
 
 
+def get_motion_kernel(length, angle):
+    # create kernel of size (len, len) with ideal line segment along the middle row (e.g., len // 2 --> int division)
+    krnl = np.zeros((length, length))
 
+    # insert ideal line segment
+    krnl[length // 2, :] = np.ones(length)
 
+    # normalize the kernel by the size dim
+    krnl = krnl / length
+
+    # rotate krnl by specified angle
+    krnl_rotated = skimage.transform.rotate(krnl, angle=angle)
+
+    return krnl_rotated
 
 
 
