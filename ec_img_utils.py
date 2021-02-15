@@ -835,6 +835,10 @@ def first_second_moment(img):
 
 
 def spatial_fitler(img, params_dict):
+
+    #convert image to float
+    img = skimage.img_as_float(img)
+
     # define default values
     m = 3
     n = 3
@@ -883,7 +887,7 @@ def geo_mean(img, m, n):
     # convert image to float
     img = skimage.img_as_float(img)
 
-    img_flt = np.exp(convolve(np.log(img), np.ones((m, n), dtype=np.float), mode='reflect')) ** (1/(m*n))
+    img_flt = np.exp(convolve(np.log(img + 1e-10), np.ones((m, n), dtype=np.float), mode='reflect')) ** (1/(m*n))
 
     return img_flt
 
