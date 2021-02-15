@@ -330,7 +330,7 @@ def padded_size(params_dict):
             max_dim = np.max(params_dict['img_dim'])
 
             # compute next power of two
-            out_dim = np.power(next_pwr_2(2 * max_dim), 2)
+            out_dim = np.power(2, next_pwr_2(2 * max_dim))
 
             # create padded_dim array
             padded_dim = np.array([out_dim, out_dim])
@@ -429,13 +429,23 @@ def dft_filt(img, H, pad_method):
     #compute origin shift
     orig_shft = ((krnl_dim[0] - img_dim[0]) // 2, (krnl_dim[1] - img_dim[1]) // 2)
 
+    # check that dimensions will match
+    x_delta = 0
+    y_delta = 0
+
+    if (2 * orig_shft[0] + img_dim[0]) - krnl_dim[0] != 0:
+        x_delta = int(krnl_dim[0] - (2 * orig_shft[0] + img_dim[0]))
+    if (2 * orig_shft[1] + img_dim[1]) - krnl_dim[1] != 0:
+        y_delta = int(krnl_dim[1] - (2 * orig_shft[1] + img_dim[1]))
+
+
     # Get padding dimensions from padded_size
     #padded_dim = padded_size({"img_dim": img_dim, "krnl_dim": krnl_dim, "pwr2": True})
 
     # Pad img to the size of the transfer function, using the default or the specified pad_method
     #img_padded = np.pad(img, ((krnl_dim[0] - img_dim[0]) // 2, (krnl_dim[1] - img_dim[1]) // 2),
     #                    mode=pad_method)
-    img_padded = np.pad(img, ((orig_shft[0], orig_shft[0]), (orig_shft[1], orig_shft[1])), mode=pad_method)
+    img_padded = np.pad(img, ((orig_shft[0], orig_shft[0] + x_delta), (orig_shft[1], orig_shft[1] + y_delta)), mode=pad_method)
 
     # Compute the FFT of the input image
     F = scipy.fft.fft2(img_padded)
@@ -904,6 +914,11 @@ def contra_harmonic_filter(img, m, n, q, d):
 
 
 def get_motion_kernel(length, angle):
+
+    # Some references: https://www.mathworks.com/help/images/ref/fspecial.html#d122e72691
+    # https://stackoverflow.com/questions/40305933/how-to-add-motion-blur-to-numpy-array
+    # I use skimage instead of OpenCV to get the rotated kernel
+
     # create kernel of size (len, len) with ideal line segment along the middle row (e.g., len // 2 --> int division)
     krnl = np.zeros((length, length))
 
@@ -920,7 +935,58 @@ def get_motion_kernel(length, angle):
     return krnl_rotated
 
 
+def pad_to_same_size(img, krnl):
 
+    # get img and kernel dimensions
+    img_dim = img.shape
+    krnl_dim = krnl.shape
+
+    #compute pad size
+    x_pad = (img_dim[0] - krnl_dim[0]) // 2
+    y_pad = (img_dim[1] - krnl_dim[1]) // 2
+
+    #protecting against odd image dimensions
+    x_delta = 0
+    y_delta = 0
+    if (2 * x_pad + krnl_dim[0]) - img_dim[0]  != 0:
+        x_delta = int(img_dim[0] - (2 * x_pad + krnl_dim[0]))
+    if (2 * y_pad + krnl_dim[1]) - img_dim[1] != 0:
+        y_delta = int(img_dim[1] - (2 * y_pad + krnl_dim[1]))
+
+    krnl_pad = np.pad(krnl, [(x_pad, x_pad + x_delta), (y_pad, y_pad + y_delta)], 'constant')
+
+    return krnl_pad
+
+
+def custom_wiener_filt(img, psf, nspr):
+
+    # compute the FFT of the input image
+    img_fft = scipy.fft.fft2(img)
+
+    # compute the Fourier transform of the kernel
+
+    # first pad the kernel
+    krnl_pad = pad_to_same_size(img, psf)
+
+    # FFT the kernel
+    krnl_fft = scipy.fft.fft2(krnl_pad)
+
+    # compute inverse filter xfr function (eqn. 5-14 from DIPUM)
+    krnl_pwr_spec = np.abs(krnl_fft)
+
+    # compute the wiener filter
+    wiener_filt = (krnl_pwr_spec / (krnl_pwr_spec + nspr)) * (1 / krnl_fft)
+
+    # filter the image
+    img_f_hat = wiener_filt * img_fft
+
+    # compute the IFFT
+    restored_ifft = skimage.img_as_float(np.real(scipy.fft.ifft2(img_f_hat)))
+
+    # ifftshift
+    restored_ifft = scipy.fft.ifftshift(restored_ifft)
+
+    return restored_ifft
 
 
 
