@@ -17,6 +17,8 @@ import exifread
 import skimage
 import skimage.util
 import skimage.restoration
+from scipy.ndimage import convolve
+
 
 def get_img_info(img):
     '''
@@ -827,6 +829,11 @@ def spatial_fitler(img, params_dict):
     if m != n:
         raise Exception("Kernel dimensions mismatch")
 
+    if 'm' in params_dict.keys():
+        m = params_dict["m"]
+    if 'n' in params_dict.keys():
+        n = params_dict["n"]
+
     Q = 1.5
     D = 2
 
@@ -836,10 +843,22 @@ def spatial_fitler(img, params_dict):
         # alternatively, we can convolve our image with a kernel of ones of size m x n divided by m * n
         img_flt = skimage.restoration.denoise_nl_means(img, patch_size=m)
 
+    if params_dict["type"] == "gmean":
+        # skimage has a non-local means denoising function. We can take advantage of that function here.
+        # alternatively, we can convolve our image with a kernel of ones of size m x n divided by m * n
+        img_flt = geo_mean(img, m, n)
+
+
     return img_flt
 
 
+def geo_mean(img, m, n):
+    # convert image to float
+    img = skimage.img_as_float(img)
 
+    img_flt = np.exp(convolve(np.log(img), np.ones((m, n), dtype=np.float) / (m * n), mode='reflect')) ** (1/(m*n))
+
+    return img_flt
 
 
 
