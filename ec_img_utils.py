@@ -16,7 +16,7 @@ import exifread
 
 import skimage
 import skimage.util
-
+import skimage.restoration
 
 def get_img_info(img):
     '''
@@ -818,5 +818,70 @@ def first_second_moment(img):
     second_moment = np.sum(np.power((bins[:-1] - mean), 2) * hist)
 
     return mean, second_moment
+
+
+def spatial_fitler(img, params_dict):
+    # define default values
+    m = 3
+    n = 3
+    if m != n:
+        raise Exception("Kernel dimensions mismatch")
+
+    Q = 1.5
+    D = 2
+
+    # arithmetic mean
+    if params_dict["type"] == "amean":
+        # skimage has a non-local means denoising function. We can take advantage of that function here.
+        # alternatively, we can convolve our image with a kernel of ones of size m x n divided by m * n
+        img_flt = skimage.restoration.denoise_nl_means(img, patch_size=m)
+
+    return img_flt
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
