@@ -848,6 +848,11 @@ def spatial_fitler(img, params_dict):
         # alternatively, we can convolve our image with a kernel of ones of size m x n divided by m * n
         img_flt = geo_mean(img, m, n)
 
+    if params_dict["type"] == "hmean":
+        # skimage has a non-local means denoising function. We can take advantage of that function here.
+        # alternatively, we can convolve our image with a kernel of ones of size m x n divided by m * n
+        img_flt = harmonic_mean(img, m, n)
+
 
     return img_flt
 
@@ -856,11 +861,19 @@ def geo_mean(img, m, n):
     # convert image to float
     img = skimage.img_as_float(img)
 
-    img_flt = np.exp(convolve(np.log(img), np.ones((m, n), dtype=np.float) / (m * n), mode='reflect')) ** (1/(m*n))
+    img_flt = np.exp(convolve(np.log(img), np.ones((m, n), dtype=np.float), mode='reflect')) ** (1/(m*n))
 
     return img_flt
 
 
+def harmonic_mean(img, m, n):
+    # conver image to float
+    img = skimage.img_as_float(img)
+
+    # convolve image
+    img_flt = (m * n) / convolve(1 / (img + 1e-10), np.ones((m, n)), mode='reflect')
+
+    return img_flt
 
 
 
