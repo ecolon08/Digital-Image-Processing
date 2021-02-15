@@ -826,6 +826,9 @@ def spatial_fitler(img, params_dict):
     # define default values
     m = 3
     n = 3
+    q = 1.5
+    d = 2
+
     if m != n:
         raise Exception("Kernel dimensions mismatch")
 
@@ -833,9 +836,12 @@ def spatial_fitler(img, params_dict):
         m = params_dict["m"]
     if 'n' in params_dict.keys():
         n = params_dict["n"]
+    if 'q' in params_dict.keys():
+        q = params_dict["q"]
+    if 'd' in params_dict.keys():
+        d = params_dict["d"]
 
-    Q = 1.5
-    D = 2
+
 
     # arithmetic mean
     if params_dict["type"] == "amean":
@@ -844,15 +850,13 @@ def spatial_fitler(img, params_dict):
         img_flt = skimage.restoration.denoise_nl_means(img, patch_size=m)
 
     if params_dict["type"] == "gmean":
-        # skimage has a non-local means denoising function. We can take advantage of that function here.
-        # alternatively, we can convolve our image with a kernel of ones of size m x n divided by m * n
         img_flt = geo_mean(img, m, n)
 
     if params_dict["type"] == "hmean":
-        # skimage has a non-local means denoising function. We can take advantage of that function here.
-        # alternatively, we can convolve our image with a kernel of ones of size m x n divided by m * n
         img_flt = harmonic_mean(img, m, n)
 
+    if params_dict["type"] == "chmean":
+        img_flt = contra_harmonic_filter(img, m, n, q, d)
 
     return img_flt
 
@@ -876,7 +880,19 @@ def harmonic_mean(img, m, n):
     return img_flt
 
 
+def contra_harmonic_filter(img, m, n, q, d):
+    # convert image to float
+    img = skimage.img_as_float(img)
+    #img = img / np.max(img)
 
+    # filter image
+    img_flt = convolve(img ** (q + 1), np.ones((m, n)), mode='nearest')
+    img_flt = img_flt / (convolve(img ** q, np.ones((m, n)), mode='nearest') + 1e-10)
+
+    #f = imfilter(g. ^ (q + 1), ones(m, n), 'replicate');
+    #f = f. / (imfilter(g. ^ q, ones(m, n), 'replicate') + eps);
+
+    return img_flt
 
 
 
