@@ -1,0 +1,239 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>dipum_proj4</title><meta name="generator" content="MATLAB 9.9"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2021-02-20"><meta name="DC.source" content="dipum_proj4.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; }
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+span.typesection { color:#A0522D }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#6">second shear transformation</a></li><li><a href="#7">third shear transformation</a></li><li><a href="#8">part c</a></li><li><a href="#9">apply first affine transformation</a></li><li><a href="#10">apply seccond affine transformation</a></li><li><a href="#11">apply third affine transformation</a></li></ul></div><p>DIPUM 3rd edition | Project 4 - Chapter 6 on Transformations Sierpinski triangle Author: Ernesto Colon Date: 2.20.21 ECE419 - Digital Image Processing @ The Cooper Union</p><pre class="codeinput">clc; clear <span class="string">all</span>; close <span class="string">all</span>
+</pre><p>This project explores compositions of affine transforms and implementing rotation as three successive shearing operations: a horizontal shear, followed by a vertical shear, followed by another horizontal shear. This can sometimes be of practical interest because each shearing operation can be implemented by shifting and interpolating image pixels in only one direction. For a rotation angle of <img src="dipum_proj4_eq08288499342375314727.png" alt="$\theta$" style="width:7px;height:11px;">, the three affine shear matrices are:</p><p><img src="dipum_proj4_eq12280441579678407937.png" alt="$$T_1 = \left[\matrix{ 1 &amp; 0 &amp; 0 \cr \alpha &amp; 1 &amp; 0 \cr 0 &amp; 0 &amp; 1} \right]$$" style="width:107px;height:53px;"></p><p><img src="dipum_proj4_eq17224044108197973683.png" alt="$$T_2 = \left[\matrix{ 1 &amp; \beta &amp; 0 \cr 0 &amp; 1 &amp; 0 \cr 0 &amp; 0 &amp; 1} \right]$$" style="width:107px;height:53px;"></p><p><img src="dipum_proj4_eq15686976604427131873.png" alt="$$T_3 = \left[\matrix{ 1 &amp; 0 &amp; 0 \cr \gamma &amp; 1 &amp; 0 \cr 0 &amp; 0 &amp; 1} \right]$$" style="width:106px;height:53px;"></p><p>where <img src="dipum_proj4_eq14975695303769371308.png" alt="$\alpha = \gamma = -tan(\theta/2)$" style="width:122px;height:15px;"> and <img src="dipum_proj4_eq00926756040668357107.png" alt="$\beta = sin(\theta)$" style="width:67px;height:15px;"></p><p>part a Make a 4 x 2 matrix containing the four vertices, (0.5, 0.5), (-0.5, 0.5), (-0.5, -0.5), and (-0.5, -0.5), of a unit square centered at the origin. Plot the square containig these vertices.</p><pre class="codeinput">unit_square = [0.5 0.5; -0.5 0.5; -0.5 -0.5; 0.5 -0.5; 0.5 0.5]
+
+<span class="comment">% plot the unit square</span>
+figure
+plot(unit_square(:,1), unit_square(:,2), <span class="string">'-'</span>)
+axis([-2 2 -2 2], <span class="string">'equal'</span>)
+hold <span class="string">on</span>
+</pre><pre class="codeoutput">
+unit_square =
+
+    0.5000    0.5000
+   -0.5000    0.5000
+   -0.5000   -0.5000
+    0.5000   -0.5000
+    0.5000    0.5000
+
+</pre><img vspace="5" hspace="5" src="dipum_proj4_01.png" alt=""> <p>part b Make three affine2d objects using the three affine transform matrixes shown aboe and <img src="dipum_proj4_eq08827517375642451698.png" alt="$\theta = 70^{\circ}$" style="width:46px;height:11px;">. In three steps, apply these affine transforms successively to the vertices of the square and superimpose plots</p><pre class="codeinput">theta = 70;
+xfm_shear_1 = affine2d([1 0 0; -tan(theta/2) 1 0; 0 0 1]);
+
+<span class="comment">% apply transformation to vertices of unit square</span>
+unit_square_xfm_1 = transformPointsForward(xfm_shear_1, unit_square);
+
+<span class="comment">% plot the rotated square</span>
+plot(unit_square_xfm_1(:,1), unit_square_xfm_1(:,2), <span class="string">'--'</span>)
+hold <span class="string">on</span>
+</pre><img vspace="5" hspace="5" src="dipum_proj4_02.png" alt=""> <h2 id="6">second shear transformation</h2><pre class="codeinput">xfm_shear_2 = affine2d([1 sin(theta) 0; 0 1 0; 0 0 1]);
+
+<span class="comment">% apply transformation to vertices of unit square</span>
+unit_square_xfm_2 = transformPointsForward(xfm_shear_2, unit_square_xfm_1);
+
+<span class="comment">% plot the rotated square</span>
+plot(unit_square_xfm_2(:,1), unit_square_xfm_2(:,2), <span class="string">'-.'</span>)
+hold <span class="string">on</span>
+</pre><img vspace="5" hspace="5" src="dipum_proj4_03.png" alt=""> <h2 id="7">third shear transformation</h2><pre class="codeinput">xfm_shear_3 = affine2d([1 0 0; -tan(theta/2) 1 0; 0 0 1]);
+
+<span class="comment">% apply transformation to vertices of unit square</span>
+unit_square_xfm_3 = transformPointsForward(xfm_shear_3, unit_square_xfm_2);
+
+<span class="comment">% plot the rotated square</span>
+plot(unit_square_xfm_3(:,1), unit_square_xfm_3(:,2), <span class="string">'--.'</span>)
+hold <span class="string">on</span>
+
+legend(<span class="string">'Unit Square'</span>,<span class="string">'First Hor. Shear'</span>,<span class="string">'Second Vert. Shear'</span>,<span class="string">'Third Vert. Shear'</span>)
+</pre><img vspace="5" hspace="5" src="dipum_proj4_04.png" alt=""> <h2 id="8">part c</h2><p>successively apply the three affine trasnformations to the image 'apple-hill-2013.png' using imwarp.</p><pre class="codeinput">img_appl_hill = imread(<span class="string">'../images/apple-hill-2013.png'</span>);
+figure
+subplot(2,2,1)
+imshow(img_appl_hill)
+title(<span class="string">"Original Image"</span>)
+</pre><img vspace="5" hspace="5" src="dipum_proj4_05.png" alt=""> <h2 id="9">apply first affine transformation</h2><pre class="codeinput">img_shear_hor_1 = imwarp(img_appl_hill, xfm_shear_1);
+subplot(2,2,2)
+imshow(img_shear_hor_1)
+title(<span class="string">"Image after first horizontal shear"</span>)
+</pre><img vspace="5" hspace="5" src="dipum_proj4_06.png" alt=""> <h2 id="10">apply seccond affine transformation</h2><pre class="codeinput">img_shear_ver_2 = imwarp(img_shear_hor_1, xfm_shear_2);
+subplot(2,2,3)
+imshow(img_shear_ver_2)
+title(<span class="string">"Image after second shear (vertical)"</span>)
+</pre><img vspace="5" hspace="5" src="dipum_proj4_07.png" alt=""> <h2 id="11">apply third affine transformation</h2><pre class="codeinput">img_shear_hor_3 = imwarp(img_shear_ver_2, xfm_shear_3);
+subplot(2,2,4)
+imshow(img_shear_hor_3)
+title(<span class="string">"Image after third shear (horizontal)"</span>)
+</pre><img vspace="5" hspace="5" src="dipum_proj4_08.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2020b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%%
+% DIPUM 3rd edition | Project 4 - Chapter 6 on Transformations
+% Sierpinski triangle
+% Author: Ernesto Colon
+% Date: 2.20.21
+% ECE419 - Digital Image Processing @ The Cooper Union
+
+clc; clear all; close all
+
+%% 
+% This project explores compositions of affine transforms and implementing 
+% rotation as three successive shearing operations: a horizontal shear, 
+% followed by a vertical shear, followed by another horizontal shear. 
+% This can sometimes be of practical interest because each shearing operation 
+% can be implemented by shifting and interpolating image pixels in only
+% one direction. For a rotation angle of $\theta$, the three affine shear 
+% matrices are: 
+%%
+% $$T_1 = \left[\matrix{ 1 & 0 & 0 \cr \alpha & 1 & 0 \cr 0 & 0 & 1} \right]$$
+% 
+% $$T_2 = \left[\matrix{ 1 & \beta & 0 \cr 0 & 1 & 0 \cr 0 & 0 & 1} \right]$$
+%
+% $$T_3 = \left[\matrix{ 1 & 0 & 0 \cr \gamma & 1 & 0 \cr 0 & 0 & 1} \right]$$
+%
+% where $\alpha = \gamma = -tan(\theta/2)$ and $\beta = sin(\theta)$
+
+%%
+% part a
+% Make a 4 x 2 matrix containing the four vertices, (0.5, 0.5), (-0.5, 0.5), 
+% (-0.5, -0.5), and (-0.5, -0.5), of a unit square centered at the origin. 
+% Plot the square containig these vertices. 
+
+unit_square = [0.5 0.5; -0.5 0.5; -0.5 -0.5; 0.5 -0.5; 0.5 0.5]
+
+% plot the unit square
+figure
+plot(unit_square(:,1), unit_square(:,2), '-')
+axis([-2 2 -2 2], 'equal')
+hold on
+
+%%
+% part b
+% Make three affine2d objects using the three affine transform matrixes
+% shown aboe and $\theta = 70^{\circ}$. In three steps, apply these affine
+% transforms successively to the vertices of the square and superimpose
+% plots
+theta = 70;
+xfm_shear_1 = affine2d([1 0 0; -tan(theta/2) 1 0; 0 0 1]);
+
+% apply transformation to vertices of unit square
+unit_square_xfm_1 = transformPointsForward(xfm_shear_1, unit_square);
+
+% plot the rotated square
+plot(unit_square_xfm_1(:,1), unit_square_xfm_1(:,2), 'REPLACE_WITH_DASH_DASH')
+hold on
+
+%% second shear transformation
+xfm_shear_2 = affine2d([1 sin(theta) 0; 0 1 0; 0 0 1]);
+
+% apply transformation to vertices of unit square
+unit_square_xfm_2 = transformPointsForward(xfm_shear_2, unit_square_xfm_1);
+
+% plot the rotated square
+plot(unit_square_xfm_2(:,1), unit_square_xfm_2(:,2), '-.')
+hold on
+
+%% third shear transformation
+xfm_shear_3 = affine2d([1 0 0; -tan(theta/2) 1 0; 0 0 1]);
+
+% apply transformation to vertices of unit square
+unit_square_xfm_3 = transformPointsForward(xfm_shear_3, unit_square_xfm_2);
+
+% plot the rotated square
+plot(unit_square_xfm_3(:,1), unit_square_xfm_3(:,2), 'REPLACE_WITH_DASH_DASH.')
+hold on
+
+legend('Unit Square','First Hor. Shear','Second Vert. Shear','Third Vert. Shear')
+
+%% part c
+% successively apply the three affine trasnformations to the image
+% 'apple-hill-2013.png' using imwarp. 
+
+img_appl_hill = imread('../images/apple-hill-2013.png');
+figure
+subplot(2,2,1)
+imshow(img_appl_hill)
+title("Original Image")
+
+%% apply first affine transformation
+img_shear_hor_1 = imwarp(img_appl_hill, xfm_shear_1);
+subplot(2,2,2)
+imshow(img_shear_hor_1)
+title("Image after first horizontal shear")
+
+%% apply seccond affine transformation
+img_shear_ver_2 = imwarp(img_shear_hor_1, xfm_shear_2);
+subplot(2,2,3)
+imshow(img_shear_ver_2)
+title("Image after second shear (vertical)")
+
+%% apply third affine transformation
+img_shear_hor_3 = imwarp(img_shear_ver_2, xfm_shear_3);
+subplot(2,2,4)
+imshow(img_shear_hor_3)
+title("Image after third shear (horizontal)")
+##### SOURCE END #####
+--></body></html>
