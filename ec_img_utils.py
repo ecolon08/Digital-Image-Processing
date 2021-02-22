@@ -670,7 +670,29 @@ def gauss_reject(D, C0, W):
 # IMAGE RESTORATION AND RECONSTRUCTION
 #######################################
 
+
 def imnoise(img, params_dict):
+    """
+    Function to add noise to an input image.
+
+    Adapted from Digital Image Processing Using Matlab, 3rd ed. by Gonzalez et al.
+
+    Parameters
+    ----------
+    img : M x N ndarray-like image
+
+    params_dict : dict
+        Valid keys-value pairs:
+            type : string describing filter type. Valid types are uniform, gaussian, salt_pepper, lognormal, rayleigh,
+                   exponential, and erlang
+            a : float defining distribution center
+            b : float defining distribution scale
+
+    Returns
+    -------
+    img_noisy: array-like image corrupted by additive noise
+    noise: array-like with additive noise that corrupted the image
+    """
 
     # convert image to float
     img = skimage.img_as_float(img)
@@ -772,6 +794,27 @@ def imnoise(img, params_dict):
 
 
 def salt_pepper(M, N, a, b):
+    """
+    Function to generate salt and pepper noise
+
+    Adapted from Digital Image Processing Using Matlab, 3rd ed. by Gonzalez et al.
+
+    Parameters
+    ----------
+    M : int
+        Vertical dimension (e.g., M x N) of filter transfer function
+    N : int
+        Horizontal dimension (e.g., M x N) of filter transfer function
+    a : float
+        Defining distribution center
+    b : float
+        Defining distribution scale
+
+    Returns
+    -------
+    sp_arr: array-like with salt and pepper additive noise
+    """
+
     # check to make sure that probabilities are valid
     if (a + b) > 1:
         raise Exception("The sum (a + b) must not exceed 1")
@@ -803,6 +846,27 @@ def salt_pepper(M, N, a, b):
 
 
 def erlang(M, N, a, b):
+    """
+    Function to generate Erlang noise
+
+    Adapted from Digital Image Processing Using Matlab, 3rd ed. by Gonzalez et al.
+
+    Parameters
+    ----------
+    M : int
+        Vertical dimension (e.g., M x N) of filter transfer function
+    N : int
+        Horizontal dimension (e.g., M x N) of filter transfer function
+    a : float
+        Defining distribution center
+    b : float
+        Defining distribution scale
+
+    Returns
+    -------
+    R: array-like with Erlang additive noise
+    """
+
     # check that b is a positive integer
     if b != np.round(b) or b <= 0:
         raise Exception("Parameter b must be a positive integer for Erlang")
