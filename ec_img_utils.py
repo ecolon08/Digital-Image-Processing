@@ -1102,3 +1102,39 @@ def my_xyz2rgb(arr):
     rgb_arr = (xyz_to_rgb_xfm @ arr.T).T
 
     return rgb_arr
+
+
+def my_rgb2hsi(rgb):
+
+    # convert image to float
+    img_float = skimage.img_as_float(rgb)
+
+    # extract rgb bands
+    red = img_float[:, :, 0]
+    green = img_float[:, :, 1]
+    blue = img_float[:, :, 2]
+
+    # implement the conversion equations
+    numer = 0.5 * ((red - green) + (red - blue))
+    denom = np.sqrt((red - green)**2 + (red - blue)*((green - blue)))
+
+    theta = np.arccos(numer / (denom + 1e-10))
+
+    H = np.where(blue > green, 2*np.pi - theta, theta)
+    H = H / (2 * np.pi)
+
+    numer = np.minimum(np.minimum(red, green), blue)
+    denom = red + green + blue
+
+    denom = np.where(denom == 0, 1e-10, denom)
+
+    S = 1 - (3 * numer) / denom
+
+    H = np.where(S == 0, 0, H)
+
+    I = (red + green + blue) / 3
+
+    # concatenate
+    hsi = np.dstack((H, S, I))
+
+    return hsi
