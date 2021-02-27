@@ -1057,10 +1057,48 @@ def custom_wiener_filt(img, psf, nspr):
     return restored_ifft
 
 
+######################################
+# COLOR IMAGE PROCESSING
+######################################
+
+def my_rgb2xyz(arr):
+    """
+    Function to convert from RGB to XYZ
+    @param arr: ndarray-like with shape P x 3 with RGB coordinate points
+    @return: ndarray-like with shape P x 3 with XYZ coordinate points
+    """
+
+    assert arr.shape[-1] == 3
+
+    # define transformation matrix
+    rgb_to_xyz_xfm = np.array([[2.768892, 1.751748, 1.130160],
+                               [1.000000, 4.590700, 0.060100],
+                               [0.000000, 0.056508, 5.594292]])
+
+    # compute transformation
+    xyz_arr = (rgb_to_xyz_xfm @ arr.T).T
+
+    return xyz_arr
 
 
+def my_xyz2rgb(arr):
+    """
+    Function to convert from XYZ RGB
+    @param arr: ndarray-like with shape P x 3 with XYZ coordinate points
+    @return: ndarray-like with shape P x 3 with RGB coordinate points
+    """
 
+    assert arr.shape[-1] == 3
 
+    # define transformation matrix
+    rgb_to_xyz_xfm = np.array([[2.768892, 1.751748, 1.130160],
+                               [1.000000, 4.590700, 0.060100],
+                               [0.000000, 0.056508, 5.594292]])
 
+    xyz_to_rgb_xfm = np.linalg.inv(rgb_to_xyz_xfm)
 
+    # compute transformation
+    #xyz_arr = (rgb_to_xyz_xfm @ arr.T).T
+    rgb_arr = (xyz_to_rgb_xfm @ arr.T).T
 
+    return rgb_arr
