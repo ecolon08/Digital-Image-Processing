@@ -1138,3 +1138,85 @@ def my_rgb2hsi(rgb):
     hsi = np.dstack((H, S, I))
 
     return hsi
+
+
+def my_hsi2rgb(hsi):
+    # extract the individual HSI component images
+    H = hsi[:, :, 0]
+    S = hsi[:, :, 1]
+    I = hsi[:, :, 2]
+
+    # Implement the conversion equations
+    red = np.zeros(hsi.shape)
+    green = np.zeros(hsi.shape)
+    blue = np.zeros(hsi.shape)
+
+    # red-green sector (0 <= H < 2*pi/3
+    idx_mask = np.where((H >= 0) & (H < 2 * (np.pi/3)), True, False)
+    idx_mask = np.expand_dims(idx_mask, -1)
+    idx_mask = np.repeat(idx_mask, repeats=3, axis=2)
+
+    blue[idx_mask] = I[idx_mask] * (1 - S[idx_mask])
+    red[idx_mask] = I[idx_mask] * (1 + S[idx_mask] * np.cos(H[idx_mask]) / np.cos((np.pi/3) - H[idx_mask]))
+    green [idx_mask] = 3 * I[idx_mask] - (red[idx_mask] + blue[idx_mask])
+
+    # blue-green sector
+    idx_mask = np.where((2 * (np.pi/3) <= H) & (H < 4 * (np.pi/3)), True, False)
+    idx_mask = np.expand_dims(idx_mask, -1)
+    idx_mask = np.repeat(idx_mask, repeats=3, axis=2)
+
+    red[idx_mask] = I[idx_mask] * (1 - S[idx_mask])
+    green[idx_mask] = I[idx_mask] * (1 + S[idx_mask] * np.cos(H[idx_mask] - 2 * (np.pi/3) / np.cos(np.pi - H[idx_mask])))
+    blue[idx_mask] = 3 * I[idx_mask] - (red[idx_mask] + green[idx_mask])
+
+    # blue-red sector
+    idx_mask = np.where((4 * (np.pi/3) <= H) & (H < 2 * np.pi), True, False)
+    idx_mask = np.expand_dims(idx_mask, -1)
+    idx_mask = np.repeat(idx_mask, repeats=3, axis=2)
+
+    green[idx_mask] = I[idx_mask] * (1 - S[idx_mask])
+    blue[idx_mask] = I[idx_mask] * (1 + S[idx_mask] * np.cos(H[idx_mask] - 4 * (np.pi/3) / np.cos(5 * (np.pi/3) - H[idx_mask])))
+    red[idx_mask] = 3 * I[idx_mask] - (green[idx_mask] + blue[idx_mask])
+
+    # concatenate
+    rgb = np.dstack((red, green, blue))
+    rgb = np.maximum(np.minimum(rgb, 1), 0)
+
+    return rgb
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
