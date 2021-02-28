@@ -1203,4 +1203,17 @@ def spatial_filt_3d(img, krnl, conv_mode):
     return flt_img
 
 
+def normalize_zero_one(img):
+    """
+    Function to normalize intensity values between [0,1]
+    @param img: ndarray-like image
+    @return: ndarray-like image normalized between 0 and 1
+    """
+    # convert image to float
+    img = skimage.img_as_float(img)
+
+    # normalize
+    img_normalized = (img - img.min()) / (img.max() - img.min())
+
+    return img_normalized
 
