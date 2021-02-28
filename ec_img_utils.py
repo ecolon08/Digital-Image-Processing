@@ -18,6 +18,7 @@ import skimage
 import skimage.util
 import skimage.restoration
 from scipy.ndimage import convolve
+from scipy.ndimage import correlate
 import skimage.filters
 import skimage.transform
 
@@ -1179,38 +1180,27 @@ def my_hsi2rgb(hsi):
     return rgb
 
 
+def spatial_filt_3d(img, krnl, conv_mode):
+    """
+    Function to perform spatial filtering for 3D images given a filter kernel
+    @param img: 3D ndarray-like image
+    @param krnl: 2D ndarray-like filter kernel
+    @param conv_mode: mode parameter for correlation/convolution that determines how the image is extended beyond
+                      boundaries
+    @return: 3D ndarray-like filtered image
+    """
+    # convert image to float
+    img = skimage.img_as_float(img)
 
+    # convolve image
+    chan_1_conv = correlate(img[:, :, 0], krnl, mode=conv_mode)
+    chan_2_conv = correlate(img[:, :, 1], krnl, mode=conv_mode)
+    chan_3_conv = correlate(img[:, :, 2], krnl, mode=conv_mode)
 
+    # concatenate filtered image
+    flt_img = np.dstack((chan_1_conv, chan_2_conv, chan_3_conv))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return flt_img
 
 
 
