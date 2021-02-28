@@ -1219,6 +1219,14 @@ def normalize_zero_one(img):
 
 
 def colorgrad(img, T=0):
+    """
+    Function to compute the gradient of a color image. Adapted from DIPUM 3rd edition - Toolbox
+    @param img:3D ndarray-like input image
+    @param T: threshold value, defaults to 0
+    @return: ndarray-like with vector_grad (gradient computed directly in RGB vector space)
+             max_dir_arr: ndarray-like with the maximum gradient direction per pixel
+             ppg: ndarray-like with the gradient computed on per-plane or per-channel basis
+    """
     # convert image to float
     skimage.img_as_float(img)
 
