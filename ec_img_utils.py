@@ -1141,8 +1141,11 @@ def my_rgb2hsi(rgb):
 
 
 def my_hsi2rgb(hsi):
+    # convert image to float
+    hsi = skimage.img_as_float(hsi)
+
     # extract the individual HSI component images
-    H = hsi[:, :, 0]
+    H = hsi[:, :, 0] * 2 * np.pi
     S = hsi[:, :, 1]
     I = hsi[:, :, 2]
 
@@ -1151,22 +1154,22 @@ def my_hsi2rgb(hsi):
     green = np.zeros((hsi.shape[0], hsi.shape[1]))
     blue = np.zeros((hsi.shape[0], hsi.shape[1]))
 
-    # red-green sector (0 <= H < 2*pi/3
-    idx_mask = np.where((H >= 0) & (H < 2 * (np.pi/3)), True, False)
-    blue[idx_mask] = I[idx_mask] * (1 - S[idx_mask])
-    red[idx_mask] = I[idx_mask] * (1 + S[idx_mask] * np.cos(H[idx_mask]) / np.cos((np.pi/3) - H[idx_mask]))
-    green [idx_mask] = 3 * I[idx_mask] - (red[idx_mask] + blue[idx_mask])
+    # red-green sector (0 <= H < 2*pi/3)
+    idx_mask = np.where(((0 <= H) & (H < (2 * np.pi) / 3)), True, False)
+    blue[idx_mask] = I[idx_mask] * (1.0 - S[idx_mask])
+    red[idx_mask] = I[idx_mask] * (1.0 + (S[idx_mask] * np.cos(H[idx_mask])) / np.cos((np.pi/3) - H[idx_mask]))
+    green[idx_mask] = 3 * I[idx_mask] - (red[idx_mask] + blue[idx_mask])
 
     # blue-green sector
     idx_mask = np.where((2 * (np.pi/3) <= H) & (H < 4 * (np.pi/3)), True, False)
     red[idx_mask] = I[idx_mask] * (1 - S[idx_mask])
-    green[idx_mask] = I[idx_mask] * (1 + S[idx_mask] * np.cos(H[idx_mask] - 2 * (np.pi/3) / np.cos(np.pi - H[idx_mask])))
+    green[idx_mask] = I[idx_mask] * (1 + S[idx_mask] * np.cos(H[idx_mask] - (2 * (np.pi/3))) / np.cos(np.pi - H[idx_mask]))
     blue[idx_mask] = 3 * I[idx_mask] - (red[idx_mask] + green[idx_mask])
 
     # blue-red sector
     idx_mask = np.where((4 * (np.pi/3) <= H) & (H < 2 * np.pi), True, False)
     green[idx_mask] = I[idx_mask] * (1 - S[idx_mask])
-    blue[idx_mask] = I[idx_mask] * (1 + S[idx_mask] * np.cos(H[idx_mask] - 4 * (np.pi/3) / np.cos(5 * (np.pi/3) - H[idx_mask])))
+    blue[idx_mask] = I[idx_mask] * (1 + S[idx_mask] * np.cos(H[idx_mask] - 4 * (np.pi/3)) / np.cos(5 * (np.pi/3) - H[idx_mask]))
     red[idx_mask] = 3 * I[idx_mask] - (green[idx_mask] + blue[idx_mask])
 
     # concatenate
