@@ -1217,3 +1217,56 @@ def normalize_zero_one(img):
 
     return img_normalized
 
+
+def colorgrad(img, T=0):
+    # convert image to float
+    skimage.img_as_float(img)
+
+    # compute the gradients
+    red_x = skimage.filters.sobel(img[:, :, 0], axis=0, mode='reflect')
+    red_y = skimage.filters.sobel(img[:, :, 0], axis=1, mode='reflect')
+
+    green_x = skimage.filters.sobel(img[:, :, 1], axis=0, mode='reflect')
+    green_y = skimage.filters.sobel(img[:, :, 1], axis=1, mode='reflect')
+
+    blue_x = skimage.filters.sobel(img[:, :, 2], axis=0, mode='reflect')
+    blue_y = skimage.filters.sobel(img[:, :, 2], axis=1, mode='reflect')
+
+    # compute the parameters of the vector gradient
+    g_xx = np.power(red_x, 2) + np.power(green_x, 2) + np.power(blue_x, 2)
+    g_yy = np.power(red_y, 2) + np.power(green_y, 2) + np.power(blue_y, 2)
+    g_xy = red_x * red_y + green_x * green_y + blue_x * blue_y
+
+    # compute gradient direction
+    max_dir = 0.5 * np.arctan( (2 * g_xy) / (g_xx - g_yy + 1e-10))
+
+    # compute the square of the magnitude
+    grad_mag = 0.5 * ((g_xx + g_yy) + (g_xx - g_yy) * np.cos(2 * max_dir) + 2 * g_xy * np.sin(2 * max_dir))
+
+    # now repeat for angle + pi/2 and select the maximum at each point
+    max_dir_2 = max_dir + (np.pi / 2)
+
+    grad_mag_2 = 0.5 * ((g_xx + g_yy) + (g_xx - g_yy) * np.cos(2 * max_dir_2) + 2 * g_xy * np.sin(2 * max_dir_2))
+
+    grad_mag = np.sqrt(grad_mag + 1e-10)
+    grad_mag_2 = np.sqrt(grad_mag_2 + 1e-10)
+
+    # create the gradient image by picking the maximum between the two and normalize between [0,1]
+    vector_grad = normalize_zero_one(np.maximum(grad_mag, grad_mag_2))
+
+    # select the corresponding angles. Where grad_mag_2 > grad_mag, pick values from max_dir + pi/2
+    max_dir_arr = np.where(max_dir_2 > max_dir, max_dir_2 + (np.pi / 2), max_dir)
+
+    # compute the per-plane gradients
+    red_grad = np.hypot(red_x, red_y)
+    green_grad = np.hypot(green_x, green_y)
+    blue_grad = np.hypot(blue_x, blue_y)
+
+    # form the composite per plane gradient
+    ppg = normalize_zero_one(red_grad + green_grad + blue_grad)
+
+    if T != 0:
+        vector_grad = vector_grad > T
+        ppg = ppg > T
+
+    return vector_grad, max_dir_arr, ppg
