@@ -1317,17 +1317,27 @@ def color_space_conv(img, method):
         K = np.minimum(np.minimum(cmy_img[:, :, 0], cmy_img[:, :, 1]), cmy_img[:, :, 2])
 
         # find instances where C = 0, M = 0, and Y = 0 and set K = 1 there
-        zero_mask = (cmy_img[:, :, 0] == 0) & (cmy_img[:, :, 1] == 0) & (cmy_img[:, :, 2] == 0)
-        K[zero_mask] = 1
+        #zero_mask = (cmy_img[:, :, 0] == 0) & (cmy_img[:, :, 1] == 0) & (cmy_img[:, :, 2] == 0)
+        #K[zero_mask] = 1
 
         # otherwise, compute the C, M, K components
-        K_masked = np.ma.masked_array(K, zero_mask)
+        #K_masked = np.ma.masked_array(K, zero_mask)
 
-        denom = np.ones(img.shape[0:2]) - K_masked
+        #denom = np.ones(img.shape[0:2]) - K_masked
+        denom = np.ones(img.shape[0:2]) - K
 
-        C = ((cmy_img[:, :, 0] - K) / denom).filled(fill_value=0)
-        M = ((cmy_img[:, :, 1] - K) / denom).filled(fill_value=0)
-        Y = ((cmy_img[:, :, 2] - K) / denom).filled(fill_value=0)
+        #C = ((cmy_img[:, :, 0] - K) / denom).filled(fill_value=0)
+        #M = ((cmy_img[:, :, 1] - K) / denom).filled(fill_value=0)
+        #Y = ((cmy_img[:, :, 2] - K) / denom).filled(fill_value=0)
+
+        C = (cmy_img[:, :, 0] - K) / denom
+        M = (cmy_img[:, :, 1] - K) / denom
+        Y = (cmy_img[:, :, 2] - K) / denom
+
+        # Set true black pixels
+        C = np.where(K == 1, 0, C)
+        M = np.where(K == 1, 0, M)
+        Y = np.where(K == 1, 0, Y)
 
         # compose the CMYK image
         out_img = np.dstack((C, M, Y, K))
