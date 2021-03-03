@@ -1278,3 +1278,70 @@ def colorgrad(img, T=0):
         ppg = ppg > T
 
     return vector_grad, max_dir_arr, ppg
+
+def color_space_conv(img, method):
+    """
+    Function to perform color conversion specified by method.
+    @param img: ndarray like color image
+    @param method: color space conversion method. Valid arguments are:
+                - rgb2cmy
+                - cmy2rgb
+                - rgb2cmyk
+                - cmyk2rgb
+    @return:
+    """
+
+    # assert that we have a color image
+    if img.shape[-1] < 3:
+        raise Exception("Not a color image")
+
+    # convert image to float and normalize, just in case
+    img = normalize_zero_one(img)
+
+    # step through different methods
+
+    # protect against uppercase
+    method = method.lower()
+
+    if method == 'rgb2cmy':
+        out_img = np.ones(img.shape) - img
+
+    elif method == 'cmy2rgb':
+        out_img = np.ones(img.shape) - img
+
+    elif method == 'rgb2cmyk':
+        # first convert to cmy space
+        cmy_img = np.ones(img.shape) - img
+
+        # compute K
+        K = np.minimum(np.minimum(cmy_img[:, :, 0], cmy_img[:, :, 1]), cmy_img[:, :, 2])
+
+        # find instances where C = 0, M = 0, and Y = 0 and set K = 1 there
+        zero_mask = (cmy_img[:, :, 0] == 0) & (cmy_img[:, :, 1] == 0) & (cmy_img[:, :, 2] == 0)
+        K[zero_mask] = 1
+
+        # otherwise, compute the C, M, K components
+        K_masked = np.ma.masked_array(K, zero_mask)
+
+        denom = np.ones(img.shape[0:2]) - K_masked
+
+        C = ((cmy_img[:, :, 0] - K) / denom).filled(fill_value=0)
+        M = ((cmy_img[:, :, 1] - K) / denom).filled(fill_value=0)
+        Y = ((cmy_img[:, :, 2] - K) / denom).filled(fill_value=0)
+
+        # compose the CMYK image
+        out_img = np.dstack((C, M, Y, K))
+
+    elif method == 'cmyk2rgb':
+        # first convert cmyk to cmy
+        C = img[:, :, 0] * (np.ones(img[:,:,0].shape) - img[:, :, -1]) + img[:, :, -1]
+        M = img[:, :, 1] * (np.ones(img[:,:,1].shape) - img[:, :, -1]) + img[:, :, -1]
+        Y = img[:, :, 2] * (np.ones(img[:,:,1].shape) - img[:, :, -1]) + img[:, :, -1]
+
+        # recompose CMY image
+        cmy_img = np.dstack((C, M, Y))
+
+        # convert to rgb
+        out_img = np.ones(cmy_img.shape) - cmy_img
+
+    return out_img
