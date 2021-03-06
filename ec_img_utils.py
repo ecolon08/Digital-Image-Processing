@@ -21,7 +21,7 @@ from scipy.ndimage import convolve
 from scipy.ndimage import correlate
 import skimage.filters
 import skimage.transform
-
+from skimage import morphology
 
 def get_img_info(img):
     '''
@@ -1360,3 +1360,100 @@ def color_space_conv(img, method):
         out_img = np.ones(cmy_img.shape) - cmy_img
 
     return out_img
+
+
+#################################
+# MORPHOLOGICAL IMAGE PROCESSING
+#################################
+
+def my_morph_recost(init_marker, mask, strel):
+    """
+    Function to compute the morphological reconstruction given an initial marker image, a mask, and a structuring
+    element. The algorithm is defined in Section 10.5 of DIPUM, 3rd edition
+
+    @param init_marker: ndarray-like with initial marker image to start the reconstruction process
+    @param mask: ndarray-like with initial mask image to reconstruct
+    @param strel: ndarray-like with initial structuring element
+    @return h: ndarray-like reconstructed image
+    """
+
+    # convert image to boolean
+    img = skimage.img_as_bool(mask)
+
+    # initialize marker
+    h = skimage.img_as_bool(init_marker)
+
+    flag = True
+    while flag:
+
+        # compute dilation of marker image
+        dil = morphology.dilation(h, strel)
+
+        # compute reconstruction by dilation
+        h_k_1 = np.logical_and(dil, img)
+
+        # repeat until h_{k+1} == h_{k}
+        if np.sum(np.abs(skimage.img_as_ubyte(h_k_1) - skimage.img_as_ubyte(h))) == 0:
+            flag = False
+        else:
+            h = h_k_1
+
+    return h
+
+
+def custom_hole_fill(img):
+    """
+    Function to fill in holes in an image using morphological reconstruction.
+    The algorithm is defined in Section 10.5 of DIPUM, 3rd edition
+
+    @param img: ndarray-like with image to fill holes for
+    @return holes_fill: ndarray-like image with filled holes
+    @return holes: ndarray-like image with holes
+    """
+    # convert image to boolean
+    img = skimage.img_as_bool(img)
+
+    # compute image complement. We will need it later
+    img_compl = np.logical_not(img)
+
+    # structuring element
+    strel = np.array([[0, 1, 0],
+                  [1, 1, 1],
+                  [0, 1, 0]], dtype=np.uint8)
+
+    # generate initial marker image
+    marker = np.zeros(img.shape)
+
+    # top border
+    marker[0, :] = 1 - img[0, :]
+
+    # bottom border
+    marker[-1, :] = 1 - img[-1, :]
+
+    # left border
+    marker[:, 0] = 1 - img[:, 0]
+
+    # right border
+    marker[:, -1] = 1 - img[:, -1]
+
+    marker = skimage.img_as_bool(marker)
+
+    flag = True
+    while flag:
+
+        # dilate the marker image with structuring element
+        marker_dil = morphology.dilation(marker, strel)
+
+        # compute reconstruction by dilation
+        holes_fill = np.logical_and(marker_dil, img_compl)
+
+        # repeat until image does not change anymore
+        if np.sum(np.abs(skimage.img_as_ubyte(holes_fill) - skimage.img_as_ubyte(marker))) == 0:
+            flag = False
+        else:
+            marker = holes_fill
+
+    # fill hole
+    hole = np.logical_and(np.logical_not(holes_fill), img_compl)
+
+    return np.logical_not(holes_fill), hole
