@@ -1457,3 +1457,25 @@ def custom_hole_fill(img):
     hole = np.logical_and(np.logical_not(holes_fill), img_compl)
 
     return np.logical_not(holes_fill), hole
+
+
+def custom_hit_or_miss(img, b1_strel, b2_strel):
+    """
+    Function to compute morphological hit or miss transform for pattern matching
+    @param img: ndarray like boolean image
+    @param b1_strel: ndaray like structuring element with pattern to match in foreground
+    @param b2_strel: ndaray like structuring element with pattern to match in background
+    @return: ndarray like boolean image with hit or miss transform
+    """
+    # convert image to boolean
+    img = skimage.img_as_bool(img)
+
+    # compute complement
+    img_compl = np.logical_not(img)
+
+    # Compute the hit or miss transform
+    hmt_foreground = morphology.binary_erosion(img, selem=b1_strel)
+    hmt_background = morphology.binary_erosion(img_compl, selem=b2_strel)
+    hmt = np.logical_and(hmt_foreground, hmt_background)
+
+    return hmt
