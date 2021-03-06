@@ -1479,3 +1479,21 @@ def custom_hit_or_miss(img, b1_strel, b2_strel):
     hmt = np.logical_and(hmt_foreground, hmt_background)
 
     return hmt
+
+
+def custom_morph_boundary_detection(img, strel):
+    """
+    Function to extract the boundary of a binary image
+    @param img: ndarray-like binary image
+    @param strel: ndarray-like structuring element used to extract boundary
+    @return: ndarray-like binary image with boundary
+    """
+    # convert image to uint8 type since we will be doing mathematical operations on it
+    img = skimage.img_as_ubyte(img)
+
+    img_erode = skimage.img_as_ubyte(morphology.erosion(img, selem=strel))
+
+    # extract boundary
+    boundary = skimage.img_as_bool(img - img_erode)
+
+    return boundary
