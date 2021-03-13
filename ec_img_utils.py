@@ -1527,3 +1527,48 @@ def custom_morph_boundary_detection(img, strel):
     boundary = skimage.img_as_bool(img - img_erode)
 
     return boundary
+
+
+########################
+# SEGMENTATION
+########################
+
+def edge_sobel(img):
+    """
+    Function to perform edge detection on an input grayscale image using a Sobel kernel
+    @param img: ndarray-like grayscale image or channel. This function assumes a single channel image. If RGB is needed,
+                individual channels may be computed individually.
+    @return:    ndarray-like edge map. Same dimensions as the input image
+    """
+
+    # convert image to float, just in case
+    img = skimage.img_as_float(img)
+
+    # Compute gradients in x and y direction using a Sobel filter
+    grad_x = skimage.filters.sobel(img, axis=0, mode='reflect')
+    grad_y = skimage.filters.sobel(img, axis=1, mode='reflect')
+
+    # compute gradient magnitude
+    sobel_edge = np.sqrt(np.power(grad_x, 2) + np.power(grad_y, 2))
+
+    return sobel_edge
+
+def edge_prewitt(img):
+    """
+    Function to perform edge detection on an input grayscale image using a Prewitt kernel
+    @param img: ndarray-like grayscale image or channel. This function assumes a single channel image. If RGB is needed,
+                individual channels may be computed individually.
+    @return:    ndarray-like edge map. Same dimensions as the input image
+    """
+
+    # convert image to float, just in case
+    img = skimage.img_as_float(img)
+
+    # Compute gradients in x and y direction using a Sobel filter
+    grad_x = skimage.filters.prewitt(img, axis=0, mode='reflect')
+    grad_y = skimage.filters.prewitt(img, axis=1, mode='reflect')
+
+    # compute gradient magnitude
+    prewitt_edge = np.sqrt(np.power(grad_x, 2) + np.power(grad_y, 2))
+
+    return prewitt_edge
