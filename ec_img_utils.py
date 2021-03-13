@@ -1572,3 +1572,24 @@ def edge_prewitt(img):
     prewitt_edge = np.sqrt(np.power(grad_x, 2) + np.power(grad_y, 2))
 
     return prewitt_edge
+
+
+def edge_roberts(img):
+    """
+    Function to perform edge detection on an input grayscale image using a Roberts kernel
+    @param img: ndarray-like grayscale image or channel. This function assumes a single channel image. If RGB is needed,
+                individual channels may be computed individually.
+    @return:    ndarray-like edge map. Same dimensions as the input image
+    """
+
+    # convert image to float, just in case
+    img = skimage.img_as_float(img)
+
+    # Compute gradients in x and y direction using a Sobel filter
+    grad_x = skimage.filters.roberts_pos_diag(img)
+    grad_y = skimage.filters.roberts_neg_diag(img)
+
+    # compute gradient magnitude
+    roberts_edge = np.sqrt(np.power(grad_x, 2) + np.power(grad_y, 2))
+
+    return roberts_edge
