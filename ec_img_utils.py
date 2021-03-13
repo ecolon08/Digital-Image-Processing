@@ -1309,6 +1309,7 @@ def colorgrad(img, T=0):
 
     return vector_grad, max_dir_arr, ppg
 
+
 def color_space_conv(img, method):
     """
     Function to perform color conversion specified by method.
@@ -1533,9 +1534,10 @@ def custom_morph_boundary_detection(img, strel):
 # SEGMENTATION
 ########################
 
-def edge_sobel(img):
+def edge_sobel(img, thresh=0):
     """
     Function to perform edge detection on an input grayscale image using a Sobel kernel
+    @param thresh: float with threshold parameter
     @param img: ndarray-like grayscale image or channel. This function assumes a single channel image. If RGB is needed,
                 individual channels may be computed individually.
     @return:    ndarray-like edge map. Same dimensions as the input image
@@ -1551,11 +1553,16 @@ def edge_sobel(img):
     # compute gradient magnitude
     sobel_edge = np.sqrt(np.power(grad_x, 2) + np.power(grad_y, 2))
 
+    if thresh != 0:
+        sobel_edge = sobel_edge > thresh
+
     return sobel_edge
 
-def edge_prewitt(img):
+
+def edge_prewitt(img, thresh=0):
     """
     Function to perform edge detection on an input grayscale image using a Prewitt kernel
+    @param thresh: float with threshold parameter
     @param img: ndarray-like grayscale image or channel. This function assumes a single channel image. If RGB is needed,
                 individual channels may be computed individually.
     @return:    ndarray-like edge map. Same dimensions as the input image
@@ -1571,12 +1578,16 @@ def edge_prewitt(img):
     # compute gradient magnitude
     prewitt_edge = np.sqrt(np.power(grad_x, 2) + np.power(grad_y, 2))
 
+    if thresh != 0:
+        prewitt_edge = prewitt_edge > thresh
+
     return prewitt_edge
 
 
-def edge_roberts(img):
+def edge_roberts(img, thresh=0):
     """
     Function to perform edge detection on an input grayscale image using a Roberts kernel
+    @param thresh: float with threshold parameter
     @param img: ndarray-like grayscale image or channel. This function assumes a single channel image. If RGB is needed,
                 individual channels may be computed individually.
     @return:    ndarray-like edge map. Same dimensions as the input image
@@ -1591,5 +1602,8 @@ def edge_roberts(img):
 
     # compute gradient magnitude
     roberts_edge = np.sqrt(np.power(grad_x, 2) + np.power(grad_y, 2))
+
+    if thresh != 0:
+        roberts_edge = roberts_edge > thresh
 
     return roberts_edge
