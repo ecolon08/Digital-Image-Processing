@@ -116,6 +116,14 @@ def gray_img_comparison_plot(params):
         axs[idx].set_title(params['titles'][idx])
         axs[idx].axis('off')
 
+    # check for odd number of subplots and delete extra ones
+    if len(params['images']) != (nrow * ncol):
+        # find the set difference
+        set_diff = np.setdiff1d(np.arange(nrow * ncol), np.arange(len(params['images'])))
+
+        for elm in set_diff:
+            fig.delaxes(axs[elm])
+
 
 # INTENSITY TRANSFORMATIONS FUNCTIONS
 
