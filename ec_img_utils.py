@@ -23,6 +23,8 @@ import skimage.filters
 import skimage.transform
 from skimage import morphology
 
+import matplotlib.pyplot as plt
+
 def get_img_info(img):
     '''
     Function to extract and print image information
@@ -50,7 +52,7 @@ def get_img_info(img):
         raise Exception('Image is not array type')
 
 
-# %%
+
 '''
 READING IMAGE EXIF INFORMATION / METADATA
 I WILL BE USING EXIFREAD FROM: https://pypi.org/project/ExifRead/
@@ -84,7 +86,35 @@ def get_exif_data(filename_with_path):
         tags = exifread.process_file(f)
         return tags
 
-    # %%
+
+
+def gray_img_comparison_plot(params):
+    """
+    Function to compare grayscale images. This is a utility function to declutter the notebooks since I keep on writing
+    the same procedure over and over when comparing image processing results.
+    @param params: dictionary with the following key-value pairs
+                   - nrow: integer with number of subplots rows
+                   - ncol: integer with number of subplots cols
+                   - figsize: tuple with figure size
+                   - images: list with images to plot
+                   - titles: list with subplot titles
+
+    @return: None - plots images side by side
+    """
+    # extract parameters
+    nrow = params['nrow']
+    ncol = params['ncol']
+    size = params['figsize']
+
+    # create subplots
+    fig, axs = plt.subplots(nrow, ncol, figsize=size)
+    axs = axs.ravel()
+
+    # plot images
+    for idx, img in enumerate(params['images']):
+        axs[idx].imshow(img, cmap='gray')
+        axs[idx].set_title(params['titles'][idx])
+        axs[idx].axis('off')
 
 
 # INTENSITY TRANSFORMATIONS FUNCTIONS
