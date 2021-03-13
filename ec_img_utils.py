@@ -1366,7 +1366,7 @@ def color_space_conv(img, method):
 # MORPHOLOGICAL IMAGE PROCESSING
 #################################
 
-def my_morph_recost(init_marker, mask, strel):
+def my_morph_reconst(init_marker, mask, strel):
     """
     Function to compute the morphological reconstruction given an initial marker image, a mask, and a structuring
     element. The algorithm is defined in Section 10.5 of DIPUM, 3rd edition
