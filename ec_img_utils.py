@@ -1615,3 +1615,86 @@ def edge_roberts(img, thresh=0):
         roberts_edge = roberts_edge > thresh
 
     return roberts_edge
+
+
+def my_laplacian_of_gaussian(img, sigma, thresh_pct):
+    """
+    Function to implement the Laplacian of Guassian Edge Detection Algorithm or Marr-Hildreth algorithm [DIP]
+    @param img: ndarray like image, single channel
+    @param sigma: Gaussian smoothing filter standard deviation
+    @param thresh_pct: float with percent of max Laplacian of Gaussian pixel values to threshold
+                        --> thresh_pct * max(Laplacian of Gaussian Image)
+    @return: Laplacian of Gaussian Edge Map
+    """
+    # convert image to float, just in case
+    img = skimage.img_as_float(img)
+
+    # Step 1) Filter the image with the Gaussian kernel
+    img_gaussian = skimage.filters.gaussian(img, sigma=sigma)
+
+    # Step 2) Compute the Laplacian of the smoothed image
+    img_gauss_lpl = skimage.filters.laplace(img_gaussian)
+
+    # Step 3) Find the zero crossings
+
+    # first compute the sign of the Laplacian image at each pixel location
+    lapl_sign = np.sign(img_gauss_lpl)
+
+    # pad the laplacian sign array on both ends
+    # Define Roberts kernels to compute the pairwise difference between pixels in each direction
+    roberts_hor_krnl = np.array([-1, 1]).reshape(1,-1)
+    roberts_ver_krnl = np.array([-1, 1]).reshape(-1,1)
+
+    diff_hor_sign = convolve(lapl_sign, roberts_hor_krnl, mode='constant')
+    diff_hor_sign = np.logical_or(diff_hor_sign < 0, diff_hor_sign > 0)
+
+    diff_ver_sign = convolve(lapl_sign, roberts_ver_krnl, mode='constant')
+    diff_ver_sign = np.logical_or(diff_ver_sign < 0, diff_ver_sign > 0)
+
+    #zero_crss_4_neigh_sign = np.logical_or(diff_ver_sign, diff_hor_sign)
+
+    # THRESHOLD
+    # compute threshold
+    t = thresh_pct * np.max(img_gauss_lpl)
+
+    # compute absolute differences
+    hor_abs = convolve(img_gauss_lpl, roberts_hor_krnl, mode='constant') > t
+    ver_abs = convolve(img_gauss_lpl, roberts_ver_krnl, mode='constant') > t
+
+    # find zero crossings for 4-neighborhood
+    abs_diff_hor = np.logical_and(hor_abs, diff_hor_sign)
+    abs_diff_ver = np.logical_and(ver_abs, diff_ver_sign)
+
+    # Combine the 4-neighborhood zero crossings from above and absolute differences
+    zero_crss_4_neigh = np.logical_or(abs_diff_hor, abs_diff_ver)
+
+
+    # POSITIVE DIAGONAL
+    zero_cr_pos_dia = skimage.filters.roberts_pos_diag(lapl_sign)
+
+    # find the zero crossing pixels
+    zero_cr_pos_dia = np.logical_or(zero_cr_pos_dia > 0,zero_cr_pos_dia < 0)
+
+    # compute the absolute diagonal difference
+    pos_dia_abs_diff = np.abs(skimage.filters.roberts_pos_diag(img_gauss_lpl)) > t
+
+    # compute the positive diagonal zero crossings for the positive diagonal
+    pos_dia = np.logical_and(zero_cr_pos_dia, pos_dia_abs_diff)
+
+    # NEGATIVE DIAGONAL
+
+    # negative diagonal direction
+    zero_cr_neg_dia = skimage.filters.roberts_neg_diag(lapl_sign)
+
+    # find the zero crossing pixels
+    zero_cr_neg_dia = np.logical_or(zero_cr_neg_dia > 0,zero_cr_neg_dia < 0)
+
+    # compute the absolute diagonal difference
+    neg_dia_abs_diff = np.abs(skimage.filters.roberts_neg_diag(img_gauss_lpl)) > t
+
+    # compute the positive diagonal zero crossings for the negative diagonal
+    neg_dia = np.logical_and(zero_cr_neg_dia, neg_dia_abs_diff)
+
+    log_edge_map = np.logical_or(np.logical_or(pos_dia, neg_dia), zero_crss_4_neigh)
+
+    return log_edge_map
