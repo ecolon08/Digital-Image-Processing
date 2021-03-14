@@ -1565,6 +1565,33 @@ def im_erode_conv(img, strel):
     return eroded
 
 
+def im_dilate_conv(img, strel):
+    """
+    Function to compute binary dilation using 2D convolutions
+    @param img: ndarray binary image
+    @param strel: structuring element
+    @return: dilated image - ndarray of same size as input img
+    """
+    # convert image to boolean and then unint so we ensure the sums performed by the convolution makes sense
+    img = skimage.img_as_bool(img).astype(int)
+    strel = skimage.img_as_bool(strel).astype(int)
+
+    # figure out the number of elements in the structuring element
+    strel_shape = strel.shape
+
+    # check that the structuring element is odd-sized
+    if strel_shape[0] % 2 == 0 and strel_shape[1] % 2 == 0:
+        raise Exception("Structuring element shape must be odd-sized")
+
+    # compute convolution
+    conv = convolve(img, strel, mode='constant', cval=0.0)
+
+    # perform erosion check now
+    dilated = np.where(conv >= 1, 1, 0).astype(int)
+
+    return dilated
+
+
 ########################
 # SEGMENTATION
 ########################
