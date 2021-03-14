@@ -1538,6 +1538,33 @@ def custom_morph_boundary_detection(img, strel):
     return boundary
 
 
+def im_erode_conv(img, strel):
+    """
+    Function to compute binary erosion using 2D convolutions --> DIPUM Project 10.1
+    @param img: ndarray binary image
+    @param strel: structuring element
+    @return: eroded image - ndarray of same size as input img
+    """
+    # convert image to boolean and then unint so we ensure the sums performed by the convolution makes sense
+    img = skimage.img_as_bool(img).astype(int)
+    strel = skimage.img_as_bool(strel).astype(int)
+
+    # figure out the number of elements in the structuring element
+    num_elm = strel.size
+
+    # check that the structuring element is odd-sized
+    if num_elm % 2 == 0:
+        raise Exception("Structuring element shape must be odd-sized")
+
+    # compute convolution
+    conv = convolve(img, strel, mode='constant', cval=0.0)
+
+    # perform erosion check now
+    eroded = np.where(conv >= num_elm, 1, 0).astype(int)
+
+    return eroded
+
+
 ########################
 # SEGMENTATION
 ########################
