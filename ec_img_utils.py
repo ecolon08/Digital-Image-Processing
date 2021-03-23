@@ -1752,3 +1752,118 @@ def my_laplacian_of_gaussian(img, sigma, thresh_pct):
     log_edge_map = np.logical_or(np.logical_or(pos_dia, neg_dia), zero_crss_4_neigh)
 
     return log_edge_map
+
+
+def k_means(img, k, num_iter=15):
+
+    # Step 1) Initialize the algorithm. Specify an initial set of means
+
+    # I will simply grab some unique pixel values from the input image
+
+    # color image case
+    if len(img.shape) > 2:
+        # get unique pixel values
+        unique_pix = np.unique(img.reshape(-1, img.shape[2]), axis=0)
+
+        # check if we only have k distinct classes in the image (contrived examples, but it happens...)
+        if unique_pix.shape[0] == k:
+            means = unique_pix
+        else:
+            idx = np.random.randint(low=0, high=unique_pix.shape[0], size=k)
+            means = unique_pix[idx, :]
+
+    # grayscale case
+    else:
+        means = np.random.choice(np.unique(img.ravel()), size=k) #.reshape(-1, 1)
+
+    # allocate arrays
+    # num_iter = 15
+    means_delta = list()
+    means_list = list()
+    means_list.append(means.copy())
+
+    for i in range(num_iter):
+
+        # create mean array to create stacks and vectorize the algorithm
+        means_stack = list()
+
+        # color image case
+        if len(img.shape) > 2:
+            for mean in range(k):
+                means_stack.append(np.expand_dims(means[mean, :], axis=0) * np.ones(img.shape))
+
+            means_stack = np.dstack(means_stack)
+
+            norms_list = list()
+            # compute Eucledian norms squared
+            norms_stack = (np.tile(img, reps=k) - means_stack) ** 2
+
+            for mean in range(k):
+                # generate indices
+                idx = np.arange(3) + 3 * mean
+                norms_list.append(np.sum(norms_stack[:, :, idx], axis=-1))
+
+            norms_stack = np.dstack(norms_list)
+
+            # Step 2) Assign samples to clusters: Assign each sample to the cluster set
+            # whose mean is the closest (ties are resolved arbitrarily, but samples are
+            # assigned to only one cluster)
+            clustered = np.argmin(norms_stack, axis = -1)
+
+            # Step 3) Update the cluster centers (means)
+            # Now I need to cycle through the means
+
+            for cluster in range(k):
+                # create masks for each mean
+                mask = np.where(clustered == cluster, 1, 0)
+                mask = np.tile(np.expand_dims(mask,axis=-1), reps=3)
+
+                # update the means vector
+                cluster_ma = np.ma.masked_array(img, mask.astype(bool))
+
+                # compute mean vector
+                cluster_means = np.ma.mean(cluster_ma, axis = (0, 1))
+
+                means[cluster, :] = cluster_means.reshape(1, -1)
+
+            means_list.append(means.copy())
+
+            # compute running delta to check stopping criterion
+            means_delta.append(np.sqrt(np.sum((means_list[i + 1] - means_list[i])**2)))
+
+        # grayscale case
+        else:
+            for mean in range(k):
+                means_stack.append(means[mean] * np.ones(img.shape))
+
+            # create mean stack
+            means_stack = np.dstack(means_stack)
+
+            # compute norms squared
+            norms_stack = (np.expand_dims(img, axis=-1) - means_stack)**2
+
+            # Step 2) Assign samples to clusters: Assign each sample to the cluster set
+            # whose mean is the closest (ties are resolved arbitrarily, but samples are
+            # assigned to only one cluster)
+            clustered = np.argmin(norms_stack, axis = -1)
+
+            # Step 3) Update the cluster centers (means)
+            # Now I need to cycle through the means
+            for cluster in range(k):
+                # create masks for each mean
+                mask = np.where(clustered == cluster, 1, 0)
+
+                # update the means vector
+                means[cluster] = np.sum(img[mask.astype(bool)]) / (np.sum(mask) + 1e-10)
+
+            means_list.append(means.copy())
+
+            # compute running delta to check stopping criterion
+            means_delta.append(np.sqrt(np.sum((means_list[i + 1] - means_list[i])**2)))
+
+        if i > 0:
+            if ((means_delta[i - 1] - means_delta[i]) == 0):
+                #print("Stopped at Iter: ", i)
+                break
+
+    return clustered
