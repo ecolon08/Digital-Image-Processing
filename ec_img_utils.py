@@ -1878,6 +1878,9 @@ def superpix_img(img, segments):
     @param segments: ndarray-like with labels or segments returned by a SLIC routine (e.g., skimage's). Shape = img.shape
     @return: ndarray-like with superpixel image. Shape is equal to img.shape
     """
+    # convert to float
+    img = skimage.img_as_float(img)
+
     # compute number of superpixels
     num_suppix = np.max(segments)
 
@@ -1918,4 +1921,4 @@ def superpix_img(img, segments):
             # impute mean values per superpixel
             output_img[mask] = mean
 
-    return output_img
+    return skimage.img_as_float(output_img)
