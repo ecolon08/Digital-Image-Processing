@@ -1867,3 +1867,55 @@ def k_means(img, k, num_iter=15):
                 break
 
     return clustered
+
+
+def superpix_img(img, segments):
+    """
+    Function to construct a superpixel image by computing the average intensity inside each superpixel.
+    This function is inspired by Matlab's SLIC example: https://www.mathworks.com/help/images/ref/superpixels.html
+
+    @param img: ndarray-like input image
+    @param segments: ndarray-like with labels or segments returned by a SLIC routine (e.g., skimage's). Shape = img.shape
+    @return: ndarray-like with superpixel image. Shape is equal to img.shape
+    """
+    # compute number of superpixels
+    num_suppix = np.max(segments)
+
+    if len(img.shape) > 2:
+        # pluck RGB channels so it is cleaner to read
+        red_chan = img[:, :, 0]
+        green_chan = img[:, :, 1]
+        blue_chan = img[:, :, 2]
+
+        # allocate space for output image
+        output_img = np.zeros(img.shape)
+
+        for ctr in range(num_suppix):
+            # get mask
+            mask = np.where(segments == ctr + 1, True, False)
+
+            # compute means
+            red_mean = np.mean(red_chan[mask])
+            green_mean = np.mean(green_chan[mask])
+            blue_mean = np.mean(blue_chan[mask])
+
+            # impute mean values per superpixel
+            output_img[mask, 0] = red_mean
+            output_img[mask, 1] = green_mean
+            output_img[mask, 2] = blue_mean
+
+    else:
+        # allocate space for output image
+        output_img = np.zeros(img.shape)
+
+        for ctr in range(num_suppix):
+            # get mask
+            mask = np.where(segments == ctr + 1, True, False)
+
+            # compute means
+            mean = np.mean(img[mask])
+
+            # impute mean values per superpixel
+            output_img[mask] = mean
+
+    return output_img
