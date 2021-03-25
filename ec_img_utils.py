@@ -1869,6 +1869,124 @@ def k_means(img, k, num_iter=15):
     return clustered
 
 
+def my_k_means(img, k, num_iter=15):
+
+    # convert image to float, just in case
+    img = skimage.img_as_float(img)
+
+    orig_shape = img.shape
+
+    if len(img.shape) > 2:
+
+        unique_pix = np.unique(img.reshape(-1, img.shape[2]), axis=0)
+
+        if unique_pix.shape[0] == k:
+            means = unique_pix
+        else:
+            idx = np.random.randint(low=0, high=unique_pix.shape[0], size=k)
+            means = unique_pix[idx, :]
+    else:
+        means = np.random.choice(np.unique(img.ravel()), size=k) #.reshape(-1, 1)
+
+    means_delta = list()
+    means_list = list()
+    means_list.append(means.copy())
+
+    # Step 2) Assign samples to clusters
+
+    # first, reshape image array
+    if len(img.shape) > 2:
+        img = img.reshape(-1, 3)
+        img_tiled = np.tile(img, reps=k)
+    else:
+        img = img.reshape(-1, 1)
+
+        img_tiled = np.tile(img, reps=k)
+
+    for i in range(num_iter):
+
+        if len(orig_shape) > 2:
+            # next, reshape initial means
+            mean_vector = means.reshape(1, -1)
+
+            # next tile all the means to the same size as the image vector
+            means_stack = np.repeat(mean_vector, repeats=img.shape[0], axis=0)
+
+            # compute norms
+            norms_stack = (img_tiled - means_stack) ** 2
+
+            norms_list = list()
+
+            for mean in range(k):
+                # generate indices
+                idx = np.arange(3) + 3 * mean
+                norms_list.append(np.sum(norms_stack[:, idx], axis=-1))
+
+            norms_stack = np.squeeze(np.dstack(norms_list))
+
+            clustered = np.argmin(norms_stack, axis = -1)
+
+            # Step 3) Update the cluster means
+
+            for cluster in range(k):
+                # compute mask per cluster
+                mask = np.where(clustered == cluster, True, False)
+
+                # index into image
+                clustered_pix = img[mask, :]
+
+                cluster_mean = np.mean(clustered_pix, axis=0)
+
+                means[cluster, :] = cluster_mean
+
+        else:
+            # next, reshape initial means
+            mean_vector = means.reshape(1, -1)
+
+            # next tile all the means to the same size as the image vector
+            means_stack = np.repeat(mean_vector, repeats=img.shape[0], axis=0)
+
+            # compute norms
+            norms_stack = (img_tiled - means_stack) ** 2
+
+            clustered = np.argmin(norms_stack, axis = -1)
+
+            for cluster in range(k):
+                # create masks for each mean
+
+                #mask = np.where(clustered == cluster, 1, 0)
+                mask = np.where(clustered == cluster, True, False)
+
+                # index into image
+                clustered_pix = img[mask, :]
+
+                # update the means vector
+                cluster_mean = np.mean(clustered_pix, axis=0)
+
+                means[cluster] = cluster_mean
+
+        means_list.append(means.copy())
+
+        means_delta.append(np.sqrt(np.sum((means_list[i + 1] - means_list[i])**2)))
+
+        #current_means_delta = np.sum((means_list[-1] - np.array(means_list)[:-1, :])**2, axis=1)
+
+        #current_means_delta = np.sum(current_means_delta, axis=1)
+
+        if i > 0:
+            #if current_means_delta[-1] < 0.01:
+            if means_delta[-1] < 0.01:
+                print("Stopped at iteration: ", i)
+                break
+
+    # re-assemble image
+    cluster_labels = clustered.reshape(orig_shape[:2])
+    res = means[clustered.flatten()]
+    res2 = res.reshape(orig_shape)
+
+    return cluster_labels, res2
+
+
 def superpix_img(img, segments):
     """
     Function to construct a superpixel image by computing the average intensity inside each superpixel.
